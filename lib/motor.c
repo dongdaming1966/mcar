@@ -2,86 +2,135 @@
 #include        <string.h>
 #include        <termios.h>
 
-#define DEVICE0 "/dev/ttyUSB0"
-#define DEVICE1 "/dev/ttyUSB1"
+#ifndef		FILEMCP
+#include	"mcp.c"
+#endif
 
-int serial_init(int num)
+#define		FILEMOTOR
+
+int motor_init()
 {
 	int fd;
 
-	struct termios options;
-
-	if(num==0)   	fd = open(DEVICE0, O_RDWR|O_NOCTTY|O_NDELAY);
-	if(num==1)   	fd = open(DEVICE1, O_RDWR|O_NOCTTY|O_NDELAY);
-   	if (fd < 0)	perror("UART: Failed to open the file. \n"); 
-
-   	tcgetattr(fd, &options);
-   	cfsetispeed(&options, B115200);	
-
-   	options.c_cflag |= CS8;	
-   	options.c_cflag |= (CLOCAL | CREAD);
-   	options.c_cflag &= ~CSIZE;
-   	options.c_cflag &= ~CRTSCTS;			
-   	options.c_cflag &= ~CSTOPB;
-   	options.c_iflag |= IGNPAR;
-
-	options.c_oflag &= ~OPOST; 		
-   	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); 
-   	options.c_iflag =(IGNBRK|IGNCR);
-
-	options.c_cc[VMIN]=0;
-	options.c_cc[VTIME]=1;
-
-	options.c_iflag &= ~(ICRNL | IGNCR);
-
-    	tcsetattr(fd, TCSANOW, &options);
-	
-if(	fcntl(fd,F_SETFL,0)<0)printf("Failed\n");
+	fd=mcp_init();
 
 	return fd;
+}
+
+
+int motor_en(int fd,int index)
+{	
+	spi_transfer(fd,0,SET_TXBUFF(0,0x00,2));
+	spi_transfer(fd,0,SET_TXDATA(0,2),0x01,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	//fault reset
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
+	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x80,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	//shutdown	
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
+	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x06,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	//switch on
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
+	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x07,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	//enable operation
+	while((mcp_chk(fd,0)));
 	
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
+	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x0f,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	while((mcp_chk(fd,0)));
+	
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
+	spi_transfer(fd,0,SET_TXDATA(0,5),0xfd,0xff,0xff,0xff,0xff);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
+	spi_transfer(fd,0,SET_TXDATA(0,5),0xb8,0x00,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	return 0;	
 }
 
-int motor_en(int num)
+int motor_di(int fd,int index)
 {
-	int fd;
-	char trace[4]={200,0,202,255};
+	while((mcp_chk(fd,0)));
 
-	fd=serial_init(num);
-	char buff[3]="EN\r";
-	write(fd,buff,sizeof(buff));
-	write(fd,&trace,sizeof(trace));
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
+	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x06,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
 
-
-	return fd;	
+	return 0;
 }
 
-void motor_di(int fd)
+int motor_wr_v(int fd,int index,long vel,long limit)
 {
-        char buff[3]="DI\r";
-        write(fd,buff,sizeof(buff));
-	close(fd);
+	if(vel>limit) vel=limit;
+	if(vel<-limit) vel=-limit;
+
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
+	spi_transfer(fd,0,SET_TXDATA(0,5),0x93,vel&0xff,(vel>>8)&0xff,(vel>>16)&0xff,(vel>>24)&0xff);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+//	printf("output:%x %x %x %x\n",vel&0xff,(vel>>8)&0xff,(vel>>16)&0xff,(vel>>24)&0xff);
+	return 0;
 }
 
-void motor_write(int fd,long vel)
+int motor_wr_la(int fd,int index,float pos)
 {
-	char buff[100];
-	int len,nByte;
+	long data;
 
-	if(vel>3000) vel=3000;
-	if(vel<-3000) vel=-3000;
+	data=pos*23*3000/360;
 
-	sprintf(buff,"V%ld\r",vel);
-	len = strlen(buff);
-	write(fd,buff,len);
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
+	spi_transfer(fd,0,SET_TXDATA(0,5),0xb4,data&0xff,(data>>8)&0xff,(data>>16)&0xff,(data>>24)&0xff);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+
+
+	return 0;
 }
-void motor_read(int fd,int16_t buff[3])
+
+int motor_wr_m(int fd,int index)
+{
+	while((mcp_chk(fd,0)));
+
+	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
+	spi_transfer(fd,0,SET_TXDATA(0,5),0x3c,0x00,0x00,0x00,0x00);
+	spi_transfer(fd,0,SET_TXSEND(0));
+
+	return 0;
+}
+
+void motor_rd(int fd,int8_t buff[3])
 {
 	char trace=0xc9;
 	int fa,i;
 	tcflush(fd,TCIOFLUSH);
-	write(fd,&trace,1);
-	//for(i=0;i<3;i++)
-		fa=read(fd,&buff[0],2);
-//		fa=read(fd,&buff[1],1);
+	fa=write(fd,&trace,1);
+	for(i=0;i<2;i++)
+	{
+		fa=read(fd,&buff[0],1);
+		if(fa<1)	i+=99;
+	}
+
 }
