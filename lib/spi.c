@@ -1,3 +1,7 @@
+//File name:	spi.c	
+//Author:	Dong Daming
+//Last Edited:	2018/4/1
+
 #include	"common.h"
 #include	"config.h"
 
@@ -8,7 +12,14 @@
 
 #define		dataconver(x) (x&0x2000)? x|0xc000:&0x1fff
 
-
+//******************************************
+//Name:		spi_init
+//Parameter:	p	int	which device is going to be initilized
+//				0--->SPI0
+//				1--->SPI1
+//Return:	fd	int	spi handle
+//Description:	spi initization
+//******************************************
 int spi_init(int p)
 {
 	int fd;
@@ -32,10 +43,27 @@ int spi_init(int p)
 	}
      	write(fd,&command,2);    	
 
-    
- 
 	return fd; 
 }
+
+//******************************************
+//Name:		spi_transfer
+//Parameter:	fd	int 	spi handle
+//		mod	int	mode
+//				0--->do not receive data.follow the data
+//				     need to be sent
+//				1--->assign the receive buffer first.then
+//				     follow the data need to be sent.
+//				2--->assign the send buffer first.then
+//				     assign the receive buffer.
+//				0--->based on mode 0,added print function.
+//				     will print the received data and send
+//				     data.
+//		len	int	length of  data 
+//		...	int 	data
+//Return:	void
+//Description:	transfer spi data
+//******************************************
 
 int spi_transfer(int fd, int mod, int len,...)
 
