@@ -1,5 +1,5 @@
 //Projact Name:	mcar
-//Authot:	Dong Daming
+//Author:	Dong Daming
 //Last Edited:	2018/3/30
 //Hardware:	Controller:	raspberry pi3
 //		IMU:		ADIS 16405
@@ -27,67 +27,54 @@
 #define 	ANGLE_BIAS (-0.37)
 #define		MOTOR_I_LIMIT 10000000
 #define		STARTPERIOD 3
+#define		COMMAXNUM 99
+#define		COMMAXLEN 20
 
-long V0=0;
-long V0_i=0;
-float V1=0;
+
 int imu_fd,motor_fd;
-double imu_data[3];
-float kalman_data[2];
-int8_t motor0_buff[3],motor1_buff[3];
-FILE *fd;
+FILE *plot_fd;
+struct timeval startt,t1;
+double timenow,timep;
+
+double pid_d=0.3;
+double pid_i=0.000001;
+double pid_p=10;
 
 //clean the handles when program was closed
-void stop(int signo)
+void clean(void)
 {
 	motor_di(motor_fd,1);
 	motor_di(motor_fd,2);
-	fclose(fd);
+	fclose(plot_fd);
 	close(motor_fd);
 	close(imu_fd);
 #ifdef	DEBUG
 	plot();
 #endif
-	_exit(0);
 }
 
 
-//main program
-int main(void)
+void stop(int signo)
 {
-	struct timeval startt,t1;
-	double timenow,timep;
+	clean();
+	_exit(0);
+}
+
+void* balance()
+{
+	long V0=0;
+	long V0_i=0;
 
 	int i;
 	int motor_move=0;
 
 	double gyro_i,angle,angle_goal,angle_error;
-	double pid_d=0.3;
-	double pid_i=0.000001;
-	double pid_p=10;
+	double imu_data[3];
+	float kalman_data[2];
 
-	pthread_t m0,m1,im,ti;
 
-	uint8_t receive[99];
-
-	signal(SIGINT,stop);
-
-	imu_fd=imu_init();
-	motor_fd=motor_init();
-
-#ifdef	MOTOR
-	motor_en(motor_fd,1);
-	motor_en(motor_fd,2);
-#endif
-
-	usleep(100000);		//wait 100ms for motor enabling
-
-	imu_rd(imu_fd,imu_data);
-	kalman_init(imu_data[1]);
-
-	fd=fopen("gnu.dat","w+");	//file that recording data
-	gettimeofday(&startt,NULL);	//record the starttime
-	while(1){
+	while(1)
+	{
 		gettimeofday(&t1,NULL);
 
 		timenow=t1.tv_sec-startt.tv_sec+((double)t1.tv_usec-(double)startt.tv_usec)/1000000;
@@ -127,9 +114,79 @@ int main(void)
 
 #ifdef	DEBUG
 		printf("angle:%-7lf\ttime:%-7lf\tV0:%-7d\tgoal:%-7lf\tV0_i:%-7d\tI:%-7lf\n",kalman_data[0],timenow,V0,angle_goal,V0_i,pid_i*V0_i);
-		fprintf(fd,"%lf %lf %lf %lf\n",timenow,gyro_i,imu_data[1],kalman_data[0]);
+		fprintf(plot_fd,"%lf %lf %lf %lf\n",timenow,gyro_i,imu_data[1],kalman_data[0]);
 #endif
-    		
 	}
+}
+
+
+//main program
+int main(void)
+{
+	double imu_data[3];
+	char com[COMMAXNUM][COMMAXLEN]={"help",		//index 0
+					"exit"		//index 1
+					};
+	char input[COMMAXLEN];
+	int index;
+	pthread_t pth;
+
+	signal(SIGINT,stop);
+	printf(" ---.---.---   --------    ------   ---  ---\n");
+	printf("|   _   __  \\ /   _____| /   __   \\|   |/  /\n");
+	printf("|  | | |  |  |   /      |   /  \\   |      /\n");
+	printf("|  | | |  |  |  |       |  |    |  |    _/\n");
+	printf("|  | | |  |  |   \\_____ |   \\__/   |   | \n");
+	printf("|__| |_|  |__|\\________| \\______/\\_|___|\n");
+
+	imu_fd=imu_init();
+	motor_fd=motor_init();
+
+#ifdef	MOTOR
+	motor_en(motor_fd,1);
+	motor_en(motor_fd,2);
+#endif
+
+	usleep(100000);		//wait 100ms for motor enabling
+
+	imu_rd(imu_fd,imu_data);
+	kalman_init(imu_data[1]);	//use accelemeter data to initilize kalman filter's data
+
+	plot_fd=fopen("gnu.dat","w+");	//file that recording data
+	gettimeofday(&startt,NULL);	//record the starttime
+	
+	pthread_create(&pth,NULL,balance,NULL);	//start balance process	
+
+	printf("Robot will start smoothly. He can not keep balance by himself. Please help the robot balance for now.\n");
+	sleep(STARTPERIOD);
+	printf("Start up finished. Robot can be released.\nyou can press help for help information.\n");
+
+	while(1)
+	{	
+		printf(">>");
+		scanf("%s",&input);
+		for(index=0;index<COMMAXNUM;index++)
+		{
+			if(!strcmp(input,com[index]))
+				break;
+		}
+
+		switch(index)
+		{
+			case 0:
+				printf("index |  name  |  description\n");
+				printf("---------------------------------\n");
+				printf("  1   |  help  | print this map\n");
+				printf("  2   |  exit  | exit the program\n");
+				break;
+			case 1: 
+				clean();
+				return 0;
+			default: 
+				printf("command are not recongized. you can press help to get help information.\n>>");
+		}
+	}
+
+	pthread_join(pth,NULL);	
 	return 0;
 }
