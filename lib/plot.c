@@ -18,8 +18,8 @@ void plot(void)
 {
         FILE *gp;
         gp = popen(GNUPLOT,"w");
-        fprintf(gp, "plot  \"gnu.dat\" using 1:2 with lines title 'Gyro_i',");
-        fprintf(gp, "\"gnu.dat\" using 1:3 with lines title 'acc',");
-        fprintf(gp, "\"gnu.dat\" using 1:4 with lines title 'Kalman'\n");
+        fprintf(gp, "plot  \"gnu.dat\" using 1:2 with lines title 'velocity',");
+        fprintf(gp, "\"gnu.dat\" using 1:3 with lines title 'angle',");
+        fprintf(gp, "\"gnu.dat\" using 1:4 with lines title 'motor velocity'\n");
         fclose(gp);
 }

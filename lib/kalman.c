@@ -10,7 +10,7 @@ float K1 =0.02;
 float angle, angle_dot; 	
 float Q_angle=0.01;// 过程噪声的协方差
 float Q_gyro=0.03;//0.003 过程噪声的协方差 过程噪声的协方差为一个一行两列矩阵
-float R_angle=5;// 测量噪声的协方差 既测量偏差
+float R_angle=20;// 测量噪声的协方差 既测量偏差
 char  C_0 = 1;
 float Q_bias, Angle_err;
 float PCt_0, PCt_1, E;
