@@ -40,8 +40,10 @@ void sys_welcome()
 void sys_para()
 {
 	char input[COMMAXLEN];
-	char com[COMMAXNUM][COMMAXLEN]={"help",		//index 0
-					"change"	//index	1
+	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
+					"c",    	//index	1
+					"p",		//index 2
+					"q"		//index 3
 					};
 	
 	char para[COMMAXNUM][COMMAXLEN]={"pid_p",	//index 0
@@ -51,22 +53,13 @@ void sys_para()
 					"swp_freq",	//index 4
 					};
 	double num;
-
 	int index;
+	int para_run=1;
 
-	if(getchar()!=' ')
+	while(para_run)
 	{
-		//didn't enter any parameters then print the parameters
-		printf("*******************************************\n");
-		printf("CONTROLLER\n");
-		printf("pid_p:%lf\tpid_i:%lf\tpid_d:%lf\n",pid_p,pid_i,pid_d);
+		printf("prar >> ");
 
-		printf("*******************************************\n");
-		printf("SWIP SIGNAL\n");
-		printf("swp_amp:%lf\tswp_freq:%lf\n",swp_amp,swp_freq);
-	}
-	else
-	{
 		scanf("%s",&input);
 		for(index=0;index<COMMAXNUM;index++)
 		{
@@ -76,8 +69,14 @@ void sys_para()
 		switch(index)
 		{
 			case 0:
-				printf("NULL\n");
+				printf("  command |  name  |  description\n");
+				printf("---------------------------------\n");
+				printf("     c    | change | change parameters\n");
+				printf("     h    |  help  | print this map.\n");
+				printf("     p    |  print | print parameters are used now\n");
+				printf("     q    |  help  | print this map\n");
 				break;
+
 			case 1:
 				scanf("%s%lf",&input,&num);
 				for(index=0;index<COMMAXNUM;index++)
@@ -97,10 +96,24 @@ void sys_para()
 						printf("parameter are not recongnized!\n");
 
 				}
-
 				break;
+
+			case 2:
+				printf("*******************************************\n");
+				printf("CONTROLLER\n");
+				printf("pid_p:%lf\tpid_i:%lf\tpid_d:%lf\n",pid_p,pid_i,pid_d);
+
+				printf("*******************************************\n");
+				printf("SWIP SIGNAL\n");
+				printf("swp_amp:%lf\tswp_freq:%lf\n",swp_amp,swp_freq);
+				break;
+
+			case 3:
+				para_run=0;
+				break;
+
 			default:
-				printf("command are not recongnized!\n");
+				printf("command are not recongized. you can type \"h\" to get help information.\n");
 		}
 	}
 }
@@ -113,14 +126,15 @@ void sys_para()
 //******************************************
 int sys_interface()
 {
-	char com[COMMAXNUM][COMMAXLEN]={"help",		//index 0
-					"exit",		//index 1
-					"para"		//index	2
+	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
+					"q",		//index 1
+					"p"		//index	2
 					};
 	char input[COMMAXLEN];
 	int index;
 
-	printf(">>");
+	printf("you can press \"h\" for help information.\n");
+	printf(">> ");
 	scanf("%s",&input);
 	for(index=0;index<COMMAXNUM;index++)
 	{
@@ -131,11 +145,11 @@ int sys_interface()
 	switch(index)
 	{
 		case 0:
-			printf("index |  name  |  description\n");
+			printf("  command |  name  |  description\n");
 			printf("---------------------------------\n");
-			printf("  1   |  help  | print this map\n");
-			printf("  2   |  exit  | exit the program\n");
-			printf("  3   |  para  | change or print parameters\n");
+			printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
+			printf("     q    |  quit  | quit this program\n");
+			printf("     p    |  para  | enter  parameters adjustment mode\n");
 			break;
 		case 1: 
 			return 0;
@@ -144,7 +158,7 @@ int sys_interface()
 			sys_para();
 			break;
 		default: 
-			printf("command are not recongized. you can press help to get help information.\n");
+			printf("command are not recongized. you can type \"h\" to get help information.\n");
 	}
 
 	return 1;

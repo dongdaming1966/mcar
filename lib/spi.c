@@ -56,7 +56,7 @@ int spi_init(int p)
 //				     follow the data need to be sent.
 //				2--->assign the send buffer first.then
 //				     assign the receive buffer.
-//				0--->based on mode 0,added print function.
+//				3--->based on mode 0,added print function.
 //				     will print the received data and send
 //				     data.
 //		len	int	length of  data 
@@ -99,6 +99,7 @@ int spi_transfer(int fd, int mod, int len,...)
 		trans.len               = len,                               
 		trans.delay_usecs       = 0,                     
 	};
+
 	if (ioctl(fd, SPI_IOC_MESSAGE(1), &trans)< 0)
 	{       
 		perror("SPI: SPI_IOC_MESSAGE Failed");        

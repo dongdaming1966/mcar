@@ -41,7 +41,7 @@ int mcp_init(void)
 
 	fd=spi_init(1);
 
-	spi_transfer(fd,0,3,INST_WRITE,0x3f,0x87);	//CANSTAT:Configuration mode
+	spi_transfer(fd,0,1,INST_RESET);	//CANSTAT:Configuration mode
 	//set baud rate 500k.due to the crystal oscillator frequency,can not use 1m
 	spi_transfer(fd,0,3,INST_WRITE,0x29,0x82);	//CNF2
 	spi_transfer(fd,0,3,INST_WRITE,0x28,0x02);	//CNF3
@@ -78,13 +78,22 @@ void mcp_print(int fd, int addr, int len)
 //Return:	chk_flg	int	if the data has been send
 //Description:	check the data in the assigned has been send
 //******************************************
-int mcp_chk(int fd, int num)
+void mcp_chk(int fd, int num)
 {
 	uint8_t buff[3];
+	int i=0;
 
-	spi_transfer(fd,1,3,buff,INST_READ,ADDR_TXB0CTRL+num*16,0x00);
+	do
+	{
+		spi_transfer(fd,1,3,buff,INST_READ,ADDR_TXB0CTRL+num*16,0x00);
+		i++;
+		if(i>500)
+		{
+			printf("[MCP]: time out.\n");
+			break;
+		}
+	}while((buff[2]>>3&0x01)&&(i<500));
 
-	return (buff[2]>>3)&0x01;
 }
 
 

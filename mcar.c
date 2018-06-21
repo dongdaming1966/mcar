@@ -15,6 +15,8 @@
 //		1.0		first version.
 //				Can keep the car balance with two wheels.
 //		1.1		improved performance in console.	
+//		1.2		changed imu and motor directions to fit
+//				mcar 2.0 hardware.
 //
 //************************************************************************
 
@@ -41,9 +43,9 @@ FILE *plot_fd;
 struct timeval timestart,t1;
 double timenow,timep;
 
-double pid_p=10;
-double pid_i=-0.000001;
-double pid_d=0.5;
+double pid_p=4.5;
+double pid_i=-0.005;
+double pid_d=0.8;
 
 double swp_amp=0;
 double swp_freq=0;
@@ -118,11 +120,11 @@ void* balance()
 
 			//The output of the controller is motor acceleration,which should controll the current. 
 			//Use the velocity control instead of current controll, because the current controll cannot set up by CANbus.
-			//So use the current controll if is possible.
+			//So use current controll if is possible.
 			//pid controller
 			ctl_output[0]=pid_p*angle_error+pid_d*(imu_data[0]-kalman_data[1]);
 #ifdef DEBUG
-			printf("time:%-7lf\toutput:%-7lf %-7lf %-7d\n",timenow,swp_amp,swp_freq,motor_output);
+			printf("time:%-7lf\toutput:%-7lf %-7lf %-7d\n",timenow,angle_goal,imu_data[1],motor_output);
 #endif
 
 #ifdef PLOT
@@ -132,9 +134,10 @@ void* balance()
 		
 		//motor_output=filter_fir(fir_num,fir_para,ctl_output);
 		motor_output+=ctl_output[0];
-
-		motor_wr_v(motor_fd,1,motor_output,200*23);
-		motor_wr_v(motor_fd,2,-motor_output,200*23);
+#ifdef MOTOR
+		motor_wr_v(motor_fd,1,-motor_output,200*23);
+		motor_wr_v(motor_fd,2,motor_output,200*23);
+#endif
 
 
 
@@ -184,7 +187,7 @@ int main(void)
 	motor_en(motor_fd,2);
 #endif
 
-//	fir_num=load_fir("fir.cfg",fir_para);	//load FIR filter parameters
+//	fir_num=file_loadfir("fir.cfg",fir_para);	//load FIR filter parameters
 
 	usleep(100000);		//wait 100ms for motor enabling
 
@@ -198,7 +201,7 @@ int main(void)
 
 	printf("Robot will start smoothly. He can not keep balance by himself. Please help the robot balance for now.\n");
 	sleep(STARTPERIOD);
-	printf("Start up finished. Robot can be released.\nyou can press help for help information.\n");
+	printf("Start up finished. Robot can be released.\n");
 
 //	pthread_create(&swp,NULL,input_sweep,NULL);	
 

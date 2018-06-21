@@ -26,6 +26,8 @@ int motor_init()
 
 	fd=mcp_init();
 
+	mcp_chk(fd,0);
+
 	return fd;
 }
 
@@ -38,6 +40,8 @@ int motor_init()
 //******************************************
 void motor_en(int fd,int index)
 {	
+	mcp_chk(fd,0);
+
 	//start all remote noeds
 
 	spi_transfer(fd,0,SET_TXBUFF(0,0x00,2));
@@ -46,7 +50,7 @@ void motor_en(int fd,int index)
 
 	//fault reset
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
 	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x80,0x00,0x00,0x00);
@@ -54,7 +58,7 @@ void motor_en(int fd,int index)
 
 	//shutdown	
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
 	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x06,0x00,0x00,0x00);
@@ -62,7 +66,7 @@ void motor_en(int fd,int index)
 
 	//switch on
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
 	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x07,0x00,0x00,0x00);
@@ -70,7 +74,7 @@ void motor_en(int fd,int index)
 
 	//enable operation
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 	
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
 	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x0f,0x00,0x00,0x00);
@@ -78,7 +82,7 @@ void motor_en(int fd,int index)
 
 	//OPMOD:FAULHABER mode
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 	
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
 	spi_transfer(fd,0,SET_TXDATA(0,5),0xfd,0xff,0xff,0xff,0xff);
@@ -86,7 +90,7 @@ void motor_en(int fd,int index)
 
 	//define home position
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
 	spi_transfer(fd,0,SET_TXDATA(0,5),0xb8,0x00,0x00,0x00,0x00);
@@ -103,7 +107,7 @@ void motor_en(int fd,int index)
 //******************************************
 void motor_di(int fd,int index)
 {
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x600+index),8));
 	spi_transfer(fd,0,SET_TXDATA(0,8),0x2b,0x40,0x60,0x00,0x06,0x00,0x00,0x00);
@@ -126,7 +130,7 @@ void motor_wr_v(int fd,int index,long vel,long limit)
 	if(vel>limit) vel=limit;
 	if(vel<-limit) vel=-limit;
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
 	spi_transfer(fd,0,SET_TXDATA(0,5),0x93,vel&0xff,(vel>>8)&0xff,(vel>>16)&0xff,(vel>>24)&0xff);
@@ -148,7 +152,7 @@ void motor_wr_la(int fd,int index,float pos)
 
 	data=pos*23*3000/360;
 
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
 	spi_transfer(fd,0,SET_TXDATA(0,5),0xb4,data&0xff,(data>>8)&0xff,(data>>16)&0xff,(data>>24)&0xff);
@@ -166,7 +170,7 @@ void motor_wr_la(int fd,int index,float pos)
 
 int motor_wr_m(int fd,int index)
 {
-	while((mcp_chk(fd,0)));
+	mcp_chk(fd,0);
 
 	spi_transfer(fd,0,SET_TXBUFF(0,(0x300+index),5));
 	spi_transfer(fd,0,SET_TXDATA(0,5),0x3c,0x00,0x00,0x00,0x00);

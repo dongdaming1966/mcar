@@ -14,8 +14,8 @@
 #include	"kalman.c"
 #endif
 
-#ifndef		FILELOAD
-#include	"load.c"
+#ifndef		FILEFILE
+#include	"file.c"
 #endif
 
 #ifndef		FILEFILTER
