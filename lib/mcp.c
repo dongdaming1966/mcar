@@ -1,6 +1,5 @@
 //File name:	mcp.c	
 //Author:	Dong Daming
-//Last Edited:	2018/4/1
 //Hardware:	MCP2515
 
 #include	"common.h"
@@ -10,6 +9,8 @@
 #endif
 
 #define		FILEMCP
+
+#define		DATALENMAX 8
 
 #define		INST_RESET 0xC0
 #define		INST_READ 0x03
@@ -96,8 +97,19 @@ void mcp_chk(int fd, int num)
 
 }
 
-
-//not complete yet
+//******************************************
+//Name:		mcp_settxbuff
+//Parameter:	fd	int 	spi handle
+//		num	int	which buffer is going to set
+//		id	int	data id
+//		len	int	length of  data 
+//Return:	void
+//Description:	set tx buffer setting
+//******************************************
+void mcp_settxbuff(int fd,int num,int id,int len)
+{
+	spi_transfer(fd,0,6,INST_TXBUFF+num*2,(id&0x7f8)>>3,(id&0x07)<<5,0x00,0x00,len);
+}
 
 //******************************************
 //Name:		mcp_setdata
@@ -112,16 +124,27 @@ void mcp_setdata(int fd,int num,int len,...)
 {
 	va_list valist;
 	int i,p;
+	uint8_t data[DATALENMAX+1];
+
+	data[0]=INST_TXBUFF+1+num*2;
 
 	va_start(valist,len);
+	for(i=0;i<len;i++)	data[i+1]=va_arg(valist,int);
+	va_end(valist);
 
-	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0SIDH,0x01);	//SIDH
-	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0SIDL,0x40);	//SIDL
-	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0DLC,0x01);	//DLC
-	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0D0,0xff);	//D0
-	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0CTRL,0x0b);	//TXB0CTRL
-
-	for(i=0;i<len;i++)	p=va_arg(valist,int);
+	spi_transfer(fd,4,len+1,data);
 	
 }
 
+//******************************************
+//Name:		mcp_txsend
+//Parameter:	fd	int 	spi handle
+//		num	int	which buffer is going to set
+//Return:	void
+//Description:	send the data in buffer 
+//******************************************
+
+void mcp_txsend(int fd,int num)
+{
+	spi_transfer(fd,0,3,INST_WRITE,ADDR_TXB0CTRL+num*16,0x0b);
+}

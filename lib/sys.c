@@ -1,6 +1,5 @@
 //File name:	sys.c
 //Author:	Dong Daming
-//Last Edited:	2018/4/17
 
 #include	"common.h"
 
@@ -13,7 +12,9 @@
 #define		COMMAXNUM 99
 #define		COMMAXLEN 20
 
-extern double pid_p,pid_i,pid_d,swp_amp,swp_freq;
+extern double para[];
+extern int para_num;
+extern int sys_run;
 
 //******************************************
 //Name:		sys_welcome
@@ -23,12 +24,12 @@ extern double pid_p,pid_i,pid_d,swp_amp,swp_freq;
 //******************************************
 void sys_welcome()
 {
-	printf(" ---.---.---   --------    ------   ---  ---\n");
+	printf("\n ---.---.---   --------    ------   ---  ---\n");
 	printf("|   _   __  \\ /   _____| /   __   \\|   |/  /\n");
 	printf("|  | | |  |  |   /      |   /  \\   |      /\n");
 	printf("|  | | |  |  |  |       |  |    |  |    _/\n");
 	printf("|  | | |  |  |   \\_____ |   \\__/   |   | \n");
-	printf("|__| |_|  |__|\\________| \\______/\\_|___|\n");
+	printf("|__| |_|  |__|\\________| \\______/\\_|___|\n\n");
 }
 
 //******************************************
@@ -43,22 +44,26 @@ void sys_para()
 	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
 					"c",    	//index	1
 					"p",		//index 2
-					"q"		//index 3
+					"q",		//index 3
+					"l",		//index 4
+					"s"		//index 5
 					};
 	
-	char para[COMMAXNUM][COMMAXLEN]={"pid_p",	//index 0
+/*	char para_name[COMMAXNUM][COMMAXLEN]={"pid_p",	//index 0
 					"pid_i",	//index 1
 					"pid_d",	//index 2
 					"swp_amp",	//index 3
 					"swp_freq",	//index 4
-					};
+					};*/
 	double num;
 	int index;
 	int para_run=1;
 
+	int i;
+
 	while(para_run)
 	{
-		printf("prar >> ");
+		printf("\npara >> ");
 
 		scanf("%s",&input);
 		for(index=0;index<COMMAXNUM;index++)
@@ -73,15 +78,17 @@ void sys_para()
 				printf("---------------------------------\n");
 				printf("     c    | change | change parameters\n");
 				printf("     h    |  help  | print this map.\n");
+				printf("     l    |  load  | load parameters from file.\n");
 				printf("     p    |  print | print parameters are used now\n");
-				printf("     q    |  help  | print this map\n");
+				printf("     q    |  quit  | back to main program\n");
+				printf("     s    |  save  | save parameters into file.\n");
 				break;
 
 			case 1:
-				scanf("%s%lf",&input,&num);
-				for(index=0;index<COMMAXNUM;index++)
+				scanf("%d%lf",&index,&num);
+/*				for(index=0;index<COMMAXNUM;index++)
 				{
-					if(!strcmp(input,para[index]))
+					if(!strcmp(input,para_name[index]))
 					break;
 				}
 
@@ -92,26 +99,42 @@ void sys_para()
 					case 2:	pid_d=num;break;
 					case 3:	swp_amp=num;break;
 					case 4:	swp_freq=num;break;
-					default:
-						printf("parameter are not recongnized!\n");
+					default:*/
+					if(index<para_num)
+						para[index]=num;
+					else
+						printf("[SYS] error: index %d %lf is out of range!\n",index,num);
 
-				}
+			//	}
 				break;
 
 			case 2:
-				printf("*******************************************\n");
+				printf("\n*******************************************\n\n");
 				printf("CONTROLLER\n");
-				printf("pid_p:%lf\tpid_i:%lf\tpid_d:%lf\n",pid_p,pid_i,pid_d);
+				printf("[0] proportion:%lf\n[1] integration:%lf\n[2] differetion:%lf\n",para[0],para[1],para[2]);
 
-				printf("*******************************************\n");
+				printf("\n*******************************************\n\n");
 				printf("SWIP SIGNAL\n");
-				printf("swp_amp:%lf\tswp_freq:%lf\n",swp_amp,swp_freq);
+				printf("[3] amplitude:%lf\n[4] frequency:%lf\n",para[3],para[4]);
+				printf("\n*******************************************\n\n");
+				printf("Others\n");
+				printf("[5] angle bias:%lf\n",para[5]);
+				printf("\n*******************************************\n\n");
+
 				break;
 
 			case 3:
 				para_run=0;
 				break;
 
+			case 4:
+				file_loadpara("para.cfg",para_num,para);
+				break;
+
+			case 5:
+				file_savepara("para.cfg",para_num,para);
+				break;
+	
 			default:
 				printf("command are not recongized. you can type \"h\" to get help information.\n");
 		}
@@ -120,11 +143,11 @@ void sys_para()
 //******************************************
 //Name:		sys_interface
 //Parameter:	void
-//Return:	num 	int	whether exit	
+//Return:	void	
 //Description:	collect user's input information, 
 //		then start the function needed.
 //******************************************
-int sys_interface()
+void* sys_interface()
 {
 	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
 					"q",		//index 1
@@ -134,33 +157,35 @@ int sys_interface()
 	int index;
 
 	printf("you can press \"h\" for help information.\n");
-	printf(">> ");
-	scanf("%s",&input);
-	for(index=0;index<COMMAXNUM;index++)
+	while(sys_run)
 	{
-		if(!strcmp(input,com[index]))
-			break;
+		printf("\n>> ");
+		scanf("%s",&input);
+		for(index=0;index<COMMAXNUM;index++)
+		{
+			if(!strcmp(input,com[index]))
+				break;
+		}
+
+		switch(index)
+		{
+			case 0:
+				printf("  command |  name  |  description\n");
+				printf("---------------------------------\n");
+				printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
+				printf("     q    |  quit  | quit this program\n");
+				printf("     p    |  para  | enter  parameters adjustment mode\n");
+				break;
+			case 1: 
+				sys_run=0;
+				break;
+			case 2:
+	
+				sys_para();
+				break;
+			default: 
+				printf("command are not recongized. you can type \"h\" to get help information.\n");
+		}
 	}
-
-	switch(index)
-	{
-		case 0:
-			printf("  command |  name  |  description\n");
-			printf("---------------------------------\n");
-			printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
-			printf("     q    |  quit  | quit this program\n");
-			printf("     p    |  para  | enter  parameters adjustment mode\n");
-			break;
-		case 1: 
-			return 0;
-		case 2:
-
-			sys_para();
-			break;
-		default: 
-			printf("command are not recongized. you can type \"h\" to get help information.\n");
-	}
-
-	return 1;
 
 }

@@ -1,6 +1,5 @@
 //File name:	spi.c	
 //Author:	Dong Daming
-//Last Edited:	2018/4/1
 
 #include	"common.h"
 #include	"config.h"
@@ -59,6 +58,7 @@ int spi_init(int p)
 //				3--->based on mode 0,added print function.
 //				     will print the received data and send
 //				     data.
+//				4--->assign send buffer only.
 //		len	int	length of  data 
 //		...	int 	data
 //Return:	void
@@ -74,6 +74,8 @@ int spi_transfer(int fd, int mod, int len,...)
 	unsigned long receive_adr=(unsigned long)receive;
 	unsigned long send_adr=(unsigned long)send;
 	int i;
+
+	int* adr;
 	
 	va_start(valist,len);
 	
@@ -91,7 +93,10 @@ int spi_transfer(int fd, int mod, int len,...)
 		send_adr = (unsigned long)va_arg(valist,uint8_t*);
 		receive_adr = (unsigned long)va_arg(valist,uint8_t*);
 	}
-	
+
+	if(mod==4)
+		send_adr = (unsigned long)va_arg(valist,int*);
+
 	struct spi_ioc_transfer trans=         
 	{
 		trans.tx_buf            = send_adr,    
@@ -114,6 +119,8 @@ int spi_transfer(int fd, int mod, int len,...)
 		for(i=0;i<len;i++)	printf("%x ",receive[i]);	
 		printf("\n");
 	}
+
+	va_end(valist);
 
 	return 0;
 }

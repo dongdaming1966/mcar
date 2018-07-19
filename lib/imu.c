@@ -1,6 +1,5 @@
 //File name:	imu.c	
 //Author:	Dong Daming
-//Last Edited:	2018/3/30
 //Hardware:	ADIS 16405
 
 #include	"common.h"
@@ -29,13 +28,8 @@ int imu_init()
 	uint8_t receive[2];
 
 	fd=spi_init(0);	
-	
-	//get product id.it should be 4015
-	spi_transfer(fd,0,2,0x56,0x00);
-	usleep(2000);
-
 	//set MSC_CTRL register 
-	spi_transfer(fd,1,2,receive,0xb4,0x06);
+	spi_transfer(fd,0,2,0xb4,0x06);
 	usleep(2000);
 	spi_transfer(fd,0,2,0xb5,0x00);
 	usleep(2000);
@@ -58,16 +52,59 @@ int imu_init()
 		spi_transfer(fd,0,2,i,0x00);
 		usleep(2000);
 	}
+	
 
-	//check if the product id is right
+	//check product id
+	spi_transfer(fd,0,2,0x56,0x00);
+	usleep(2000);
+
+	//check MSC_CTRL
+	spi_transfer(fd,1,2,receive,0x34,0x00);
+	usleep(2000);
+
 	if((receive[0]==0x40)&&(receive[1]==0x15))
-		printf("IMU initilized.\n");
+		printf("[IMU] product id checked.\n");
 	else
 	{
-		printf("IMU error:%x%x\n",receive[0],receive[1]);
+		printf("[IMU] error: product id is wrong received %x%x\n",receive[0],receive[1]);
 		return -1;
 	}
 
+	//check SIMPL_PRD
+	spi_transfer(fd,1,2,receive,0x36,0x00);
+	usleep(2000);
+
+	if((receive[0]==0x00)&&(receive[1]==0x06))
+		printf("[IMU] MSC_CTL checked.\n");
+	else
+	{
+		printf("[IMU] error: MSC_CTL is wrong received %x%x\n",receive[0],receive[1]);
+		return -1;
+	}
+
+	//check SENS_AVG
+	spi_transfer(fd,1,2,receive,0x38,0x00);
+	usleep(2000);
+
+	if((receive[0]==0x00)&&(receive[1]==0x01))
+		printf("[IMU] SIMPL_PRD checked.\n");
+	else
+	{
+		printf("[IMU] error: SIMPL_PRD is wrong received %x%x\n",receive[0],receive[1]);
+		return -1;
+	}
+
+	//read last register
+	spi_transfer(fd,1,2,receive,0x00,0x00);
+	usleep(2000);
+
+	if((receive[0]==0x04)&&(receive[1]==0x02))
+		printf("[IMU] SENS_AVG checked.\n");
+	else
+	{
+		printf("[IMU] error: SENS_AVG is wrong received %x%x\n",receive[0],receive[1]);
+		return -1;
+	}
 	return fd; 
 }
  
@@ -97,8 +134,9 @@ void imu_rd(int fd,double data[3])
 	//SUPPLY OUT	
 	spi_transfer(fd,0,2,0x02,0x00);
 	spi_transfer(fd,1,2,buff,0xb4,0x06);
-	data[2]=DATACONVERT((int16_t)buff[0]<<8|buff[1])*2.418;
+//	data[2]=DATACONVERT((int16_t)buff[0]<<8|buff[1])*2.418;
 
+	data[2]=accy;
 	accy-=ACCBIAS;			//make data symmetrical
 	if(accy>1)	accy=1;
 	if(accy<-1)	accy=-1;

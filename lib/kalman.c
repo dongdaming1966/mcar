@@ -1,6 +1,5 @@
 //File name:	kalman.c
 //Author:	平衡小车之家(http://shop114407458.taobao.com/)
-//Last Edited:	2018/3/30
 
 #include	"common.h"
 
@@ -19,20 +18,20 @@ float Pdot[4] ={0,0,0,0};
 float PP[2][2] = { { 1, 0 },{ 0, 1 } };
 
 //******************************************
-//Name:		kalman_init
+//Name:		kalman_imu_init
 //Parameter:	acc	float	accelerometer data
 //
 //Return:	void	
 //Description:	Use the angle measured by accelerometer as
 //		the starting value.	
 //******************************************
-void kalman_init(float acc)
+void kalman_imu_init(float acc)
 {
 	angle=acc;
 }
 
 //******************************************
-//Name:		kalman_filter	
+//Name:		kalman_imu_filter	
 //Parameter:	gyro	float	gyro data
 //		acc	float	acclerometer data
 //		dt	float	time passed after last calculation
@@ -42,7 +41,7 @@ void kalman_init(float acc)
 //Return:	void
 //Description:	kalman filter algorithm
 //******************************************
-void kalman_filter(float gyro,float acc,float dt,float data[2])		
+void kalman_imu_filter(float gyro,float acc,float dt,float data[2])		
 {
 	angle+=(gyro - Q_bias) * dt; //先验估计
 
@@ -81,3 +80,4 @@ void kalman_filter(float gyro,float acc,float dt,float data[2])
 	data[0]=angle;
 	data[1]=Q_bias;
 }
+

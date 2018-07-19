@@ -1,6 +1,5 @@
 //File name:	plot.c	
 //Author:	Dong Daming
-//Last Edited:	2018/4/1
 
 #include        "common.h"
 

@@ -1,6 +1,5 @@
 //File name:	filter.c
 //Author:	Dong Daming
-//Last Edited:	2018/4/16
 
 #include	"common.h"
 

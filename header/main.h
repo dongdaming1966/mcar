@@ -30,3 +30,25 @@
 #include	<sys/time.h>
 #include	<sys/wait.h>
 #include	<math.h>
+
+//*********************************
+//
+// PID Controller
+// proportion [0]        
+// integration [1]        
+// differetiation [2]
+//
+//*********************************
+//
+// Swing Signal
+// amplitude [3]
+// frequency [4]
+//
+//*********************************
+//
+// Others
+// angle bias [5]
+//
+//********************************
+double para[6];
+int para_num=6;
