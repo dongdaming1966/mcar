@@ -135,6 +135,22 @@ void motor_wr_v(int fd,int index,long vel,long limit)
 }
 
 //******************************************
+//Name:		motor_wr_hm
+//Parameter:	fd	int	spi handle
+//		index	int	motor int
+//Return:	void
+//Description:	set home postion
+//******************************************
+void motor_wr_hm(int fd, int index)
+{
+	mcp_chk(fd,0);
+
+	mcp_settxbuff(fd,0,(0x300+index),5);
+	mcp_setdata(fd,0,5,0xb8,0x00,0x00,0x00,0x00);
+	mcp_txsend(fd,0);
+}
+
+//******************************************
 //Name:		motor_wr_la
 //Parameter:	fd	int	spi handle
 //		index	int	motor int
@@ -174,20 +190,5 @@ int motor_wr_m(int fd,int index)
 	mcp_txsend(fd,0);
 
 	return 0;
-}
-
-//not complete yet
-void motor_rd(int fd,int8_t buff[3])
-{
-	char trace=0xc9;
-	int fa,i;
-	tcflush(fd,TCIOFLUSH);
-	fa=write(fd,&trace,1);
-	for(i=0;i<2;i++)
-	{
-		fa=read(fd,&buff[0],1);
-		if(fa<1)	i+=99;
-	}
-
 }
 

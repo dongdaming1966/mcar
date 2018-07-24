@@ -2,9 +2,14 @@
 //Author:	Dong Daming
 
 #include	"common.h"
+#include	<pthread.h>
 
 #ifndef		FILEMOTOR
 #include	"motor.c"
+#endif
+
+#ifndef		FILEFUNC
+#include	"func.c"
 #endif
 
 #define		FILESYS
@@ -15,6 +20,7 @@
 extern double para[];
 extern int para_num;
 extern int sys_run;
+extern int balance_run;
 
 //******************************************
 //Name:		sys_welcome
@@ -48,13 +54,7 @@ void sys_para()
 					"l",		//index 4
 					"s"		//index 5
 					};
-	
-/*	char para_name[COMMAXNUM][COMMAXLEN]={"pid_p",	//index 0
-					"pid_i",	//index 1
-					"pid_d",	//index 2
-					"swp_amp",	//index 3
-					"swp_freq",	//index 4
-					};*/
+
 	double num;
 	int index;
 	int para_run=1;
@@ -86,39 +86,23 @@ void sys_para()
 
 			case 1:
 				scanf("%d%lf",&index,&num);
-/*				for(index=0;index<COMMAXNUM;index++)
-				{
-					if(!strcmp(input,para_name[index]))
-					break;
-				}
-
-				switch(index)
-				{
-					case 0:	pid_p=num;break;
-					case 1:	pid_i=num;break;
-					case 2:	pid_d=num;break;
-					case 3:	swp_amp=num;break;
-					case 4:	swp_freq=num;break;
-					default:*/
-					if(index<para_num)
-						para[index]=num;
-					else
-						printf("[SYS] error: index %d %lf is out of range!\n",index,num);
-
-			//	}
+				if(index<para_num)
+					para[index]=num;
+				else
+					printf("[SYS] error: index %d %lf is out of range!\n",index,num);
 				break;
 
 			case 2:
 				printf("\n*******************************************\n\n");
 				printf("CONTROLLER\n");
-				printf("[0] proportion:%lf\n[1] integration:%lf\n[2] differetion:%lf\n",para[0],para[1],para[2]);
+				printf("[0] proportion:%lf\n[1] differetion:%lf\n[2] velocity gain:%lf\n[3] position gain: %lf\n",para[0],para[1],para[2],para[3]);
 
 				printf("\n*******************************************\n\n");
 				printf("SWIP SIGNAL\n");
-				printf("[3] amplitude:%lf\n[4] frequency:%lf\n",para[3],para[4]);
+				printf("[4] amplitude:%lf\n[5] frequency:%lf\n",para[4],para[5]);
 				printf("\n*******************************************\n\n");
 				printf("Others\n");
-				printf("[5] angle bias:%lf\n",para[5]);
+				printf("[6] angle bias:%lf\n",para[6]);
 				printf("\n*******************************************\n\n");
 
 				break;
@@ -134,12 +118,14 @@ void sys_para()
 			case 5:
 				file_savepara("para.cfg",para_num,para);
 				break;
+
 	
 			default:
 				printf("command are not recongized. you can type \"h\" to get help information.\n");
 		}
 	}
 }
+
 //******************************************
 //Name:		sys_interface
 //Parameter:	void
@@ -151,15 +137,20 @@ void* sys_interface()
 {
 	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
 					"q",		//index 1
-					"p"		//index	2
+					"p",		//index	2
+					"b"		//index 3
 					};
 	char input[COMMAXLEN];
 	int index;
+	
+	void *ret;
+
+	pthread_t bal;
 
 	printf("you can press \"h\" for help information.\n");
 	while(sys_run)
 	{
-		printf("\n>> ");
+		printf(">> ");
 		scanf("%s",&input);
 		for(index=0;index<COMMAXNUM;index++)
 		{
@@ -172,17 +163,40 @@ void* sys_interface()
 			case 0:
 				printf("  command |  name  |  description\n");
 				printf("---------------------------------\n");
+				printf("     b    | balance| toggle balance proccess status\n");
 				printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
 				printf("     q    |  quit  | quit this program\n");
 				printf("     p    |  para  | enter  parameters adjustment mode\n");
 				break;
+
 			case 1: 
+				if(balance_run)
+				{
+					balance_run=0;
+					pthread_join(bal,&ret);
+				}
 				sys_run=0;
 				break;
+
 			case 2:
-	
 				sys_para();
 				break;
+
+			case 3:
+				if(balance_run==0)
+				{
+					balance_run=1;
+					printf("[SYS] Balance proccess started.\n");
+					pthread_create(&bal,NULL,balance,NULL);	//start balance process	
+
+				}
+				else
+				{
+					balance_run=0;
+					printf("[SYS] Balance proccess stopped.\n");
+				}
+				break;
+
 			default: 
 				printf("command are not recongized. you can type \"h\" to get help information.\n");
 		}

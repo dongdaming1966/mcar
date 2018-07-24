@@ -26,29 +26,36 @@
 #include	"sys.c"
 #endif
 
+#ifndef		FILEFUNC
+#include	"func.c"
+#endif
+
 #include	<pthread.h>
-#include	<sys/time.h>
-#include	<sys/wait.h>
-#include	<math.h>
+
 
 //*********************************
 //
-// PID Controller
+// PD Controller
 // proportion [0]        
-// integration [1]        
-// differetiation [2]
+// differetiation [1]
+//
+// velocity gain [2]
+// position gain [3]
 //
 //*********************************
 //
 // Swing Signal
-// amplitude [3]
-// frequency [4]
+// amplitude [4]
+// frequency [5]
 //
 //*********************************
 //
 // Others
-// angle bias [5]
+// angle bias [6]
 //
 //********************************
-double para[6];
-int para_num=6;
+double para[7];
+int para_num=7;
+
+int sys_run=1;
+int balance_run=0;

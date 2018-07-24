@@ -78,6 +78,6 @@ void kalman_imu_filter(float gyro,float acc,float dt,float data[2])
 	angle_dot   = gyro - Q_bias;	 //输出值(后验估计)的微分=角速度
 
 	data[0]=angle;
-	data[1]=Q_bias;
+	data[1]=gyro-Q_bias;
 }
 
