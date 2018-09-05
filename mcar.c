@@ -39,7 +39,6 @@ int main(void)
 	int motor_fd;
 
 	signal(SIGINT,stop);
-
 	sys_welcome();
 
 	file_loadpara("para.cfg",para_num,para);
@@ -51,15 +50,10 @@ int main(void)
 		clean();
 	}
 
-//	fir_num=file_loadfir("fir.cfg",fir_para);	//load FIR filter parameters
-
-	imu_rd(imu_fd,imu_data);
-	kalman_imu_init(imu_data[1]);	//use accelemeter data to initilize kalman filter's data
-
 	pthread_create(&sys,NULL,sys_interface,NULL);	//start interface process	
 
 	while(sys_run);
-
 	clean();
+
 	return 0;
 }

@@ -138,14 +138,15 @@ void* sys_interface()
 	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
 					"q",		//index 1
 					"p",		//index	2
-					"b"		//index 3
+					"b",		//index 3
+					"s"		//index 4
 					};
 	char input[COMMAXLEN];
 	int index;
 	
 	void *ret;
 
-	pthread_t bal;
+	pthread_t bal,swp;
 
 	printf("you can press \"h\" for help information.\n");
 	while(sys_run)
@@ -165,8 +166,9 @@ void* sys_interface()
 				printf("---------------------------------\n");
 				printf("     b    | balance| toggle balance proccess status\n");
 				printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
-				printf("     q    |  quit  | quit this program\n");
 				printf("     p    |  para  | enter  parameters adjustment mode\n");
+				printf("     q    |  quit  | quit this program\n");
+				printf("     s    |  sweep | start target angle sweeping program\n");
 				break;
 
 			case 1: 
@@ -195,6 +197,10 @@ void* sys_interface()
 					balance_run=0;
 					printf("[SYS] Balance proccess stopped.\n");
 				}
+				break;
+
+			case 4 :
+				pthread_create(&swp,NULL,sweep,NULL);	//start sweep process	
 				break;
 
 			default: 

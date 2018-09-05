@@ -2,9 +2,9 @@
 #define         SPI1_PATH "/dev/spidev0.1"
 
 //#define		TIMECHECK	
-//#define		DATARECORD
+#define		DATARECORD
 //need define DATARECORD before define PLOT
-//#define		PLOT
+#define		PLOT
 //#define		MONITOR
 #define		REALTIME
 #define		MOTOR

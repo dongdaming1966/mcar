@@ -56,12 +56,20 @@ void* balance()
 	double motor_i=0;
 	double angle_error=0;
 	double imu_data[3];
-	float kalman_imu_data[2];
+	double *kalman_imu_data;
+	double test_data[2];
+	double kalman_est;
+	double temp;
 
 #ifdef	TIMECHECK
 	double check_time[99];
 #endif
 
+#ifdef	DATARECORD
+	plot_fd=fopen("gnu.dat","w+");	//file that recording data
+#endif
+
+#ifdef	MOTOR
 	motor_fd=motor_init();
 	if(motor_fd<0)
 	{
@@ -69,10 +77,6 @@ void* balance()
 		clean();
 		_exit(0);
 	}
-
-	plot_fd=fopen("gnu.dat","w+");	//file that recording data
-
-#ifdef	MOTOR
 	motor_en(motor_fd,1);
 	motor_en(motor_fd,2);
 #endif
@@ -88,37 +92,41 @@ void* balance()
 
 	while(balance_run)
 	{
+
 #ifdef	TIMECHECK
 		gettimeofday(&t1,NULL);
 		check_time[0]=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 #endif
+
 		imu_rd(imu_fd,imu_data);
-		kalman_imu_filter(imu_data[0],imu_data[1],timenow-timep,kalman_imu_data);
+	//	kalman_imu_filter(imu_data[0],imu_data[1],0.002,test_data);
+
+		kalman_imu_data=kalman(imu_data[1],imu_data[0]);
 
 #ifdef	TIMECHECK
 		gettimeofday(&t1,NULL);
 		check_time[1]=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 #endif
 
-//		gyro_i+=kalman_imu_data[1]*(timenow-timep);
-
 		//set the different goal in different position
 		motor_i+=motor_output;
-		angle_error=kalman_imu_data[0]+para[2]*motor_output+para[3]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		angle_error=*(kalman_imu_data)+para[2]*motor_output+para[3]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
 
 		//The output of the controller is motor acceleration,which should controll the current. 
 		//Use the velocity control instead of current controll, because the current controll cannot set up by CANbus.
 		//So use current controll if is possible.
 		//pd controller
-		ctl_output[0]=para[0]*angle_error+para[1]*kalman_imu_data[1];
+		ctl_output[0]=para[0]*angle_error+para[1]**(kalman_imu_data+1);
 
 		if(timenow<STARTPERIOD)
 			ctl_output[0]*=timenow/STARTPERIOD;
 
+//		ctl_output[0]=214.8*kalman_est[0]-1141.8*kalman_est[1];
+//		ctl_output[0]/=80;
+
 #ifdef MONITOR
-		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tcontroller%-10lf\n",timenow,kalman_imu_data[0],kalman_imu_data[1],ctl_output[0]);
+		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tcontroller%-10lf\n",timenow,*(kalman_imu_data),kalman_imu_data[1],ctl_output[0]);
 #endif	
-		//motor_output=filter_fir(fir_num,fir_para,ctl_output);
 
 #ifdef	TIMECHECK
 		gettimeofday(&t1,NULL);
@@ -129,7 +137,7 @@ void* balance()
 		motor_output+=ctl_output[0];
 
 #ifdef	DATARECORD
-		fprintf(plot_fd,"%lf %lf %lf %lf %lf %lf %lf\n",timenow,kalman_imu_data[1],kalman_imu_data[0],ctl_output[0],imu_data[0],imu_data[1],imu_data[2]);
+		fprintf(plot_fd,"%lf %lf %lf %lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),imu_data[1]);
 #endif
 
 #ifdef	TIMECHECK
@@ -175,17 +183,19 @@ void* balance()
 #endif
 }
 
-void* input_sweep()
+void* sweep()
 {
 	int i=0;
-	double amp[6]={2,-2,2,-3,3,0};
-	double freq[6]={1,1.5,2,2.5,3,0};
+	double amp[6]={2,-2,2,-3,3,-4};
+	double freq[6]={1,1.5,2,2.5,3,4};
 
-	printf("start sweeping\n");
+	printf("\b\b\b[FUNC] start sweeping.\n>> ");
+	fflush(stdout);
 
 	for(i=0;i<6;i++)
 	{
-		printf("amp:%lf\tfreq:%lf\n",amp[i],freq[i]);
+		printf("\b\b\b[FUNC] amp:%lf\tfreq:%lf\n>> ",amp[i],freq[i]);
+		fflush(stdout);
 		while(timenow-STARTPERIOD<10*(i+1))
 		{
 			para[4]=amp[i];
@@ -196,5 +206,6 @@ void* input_sweep()
 	para[4]=0;
 	para[5]=0;
 
-	printf("input scaning finished!\n");
+	printf("\b\b\b[FUNC] sweeping finished.\n>> ");
+	fflush(stdout);
 }
