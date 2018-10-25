@@ -122,15 +122,19 @@ void motor_di(int fd,int index)
 //Description:	motor velocity control
 //******************************************
 
-void motor_wr_v(int fd,int index,long vel,long limit)
+void motor_wr_v(int fd,int index,double vel,long limit)
 {
+	long raw;
 	if(vel>limit) vel=limit;
 	if(vel<-limit) vel=-limit;
+
+	//unit conversion
+	raw = vel * 60*23/2/PI;	
 
 	mcp_chk(fd,0);
 
 	mcp_settxbuff(fd,0,(0x300+index),5);
-	mcp_setdata(fd,0,5,0x93,vel&0xff,(vel>>8)&0xff,(vel>>16)&0xff,(vel>>24)&0xff);
+	mcp_setdata(fd,0,5,0x93,raw&0xff,(raw>>8)&0xff,(raw>>16)&0xff,(raw>>24)&0xff);
 	mcp_txsend(fd,0);
 }
 

@@ -21,6 +21,7 @@ extern double para[];
 extern int para_num;
 extern int sys_run;
 extern int balance_run;
+extern int cali_run;
 
 //******************************************
 //Name:		sys_welcome
@@ -94,15 +95,18 @@ void sys_para()
 
 			case 2:
 				printf("\n*******************************************\n\n");
-				printf("CONTROLLER\n");
+				printf("PID CONTROLLER\n");
 				printf("[0] proportion:%lf\n[1] differetion:%lf\n[2] velocity gain:%lf\n[3] position gain: %lf\n",para[0],para[1],para[2],para[3]);
 
 				printf("\n*******************************************\n\n");
 				printf("SWIP SIGNAL\n");
 				printf("[4] amplitude:%lf\n[5] frequency:%lf\n",para[4],para[5]);
 				printf("\n*******************************************\n\n");
-				printf("Others\n");
+				printf("IMU\n");
 				printf("[6] angle bias:%lf\n",para[6]);
+				printf("\n*******************************************\n\n");
+				printf("PID CONTROLLER with FEEDBACK LINEARZATION\n");
+				printf("[7] proportion:%lf\n[8] differetion:%lf\n[9] velocity gain:%lf\n[10] position gain: %lf\n",para[7],para[8],para[9],para[10]);
 				printf("\n*******************************************\n\n");
 
 				break;
@@ -139,14 +143,15 @@ void* sys_interface()
 					"q",		//index 1
 					"p",		//index	2
 					"b",		//index 3
-					"s"		//index 4
+					"s",		//index 4
+					"c"		//index 5
 					};
 	char input[COMMAXLEN];
 	int index;
 	
 	void *ret;
 
-	pthread_t bal,swp;
+	pthread_t bal,swp,cali;
 
 	printf("you can press \"h\" for help information.\n");
 	while(sys_run)
@@ -162,13 +167,14 @@ void* sys_interface()
 		switch(index)
 		{
 			case 0:
-				printf("  command |  name  |  description\n");
+				printf("  command |  name   |  description\n");
 				printf("---------------------------------\n");
-				printf("     b    | balance| toggle balance proccess status\n");
-				printf("     h    |  help  | print this help menu, can also be used in other modes to print others help menu\n");
-				printf("     p    |  para  | enter  parameters adjustment mode\n");
-				printf("     q    |  quit  | quit this program\n");
-				printf("     s    |  sweep | start target angle sweeping program\n");
+				printf("     b    | balance | toggle balance proccess status\n");
+				printf("     c    |calibrate| calibrate imu.\n");
+				printf("     h    |  help   | print this help menu, can also be used in other modes to print others help menu\n");
+				printf("     p    |  para   | enter  parameters adjustment mode\n");
+				printf("     q    |  quit   | quit this program\n");
+				printf("     s    |  sweep  | start target angle sweeping program\n");
 				break;
 
 			case 1: 
@@ -176,6 +182,12 @@ void* sys_interface()
 				{
 					balance_run=0;
 					pthread_join(bal,&ret);
+				}
+
+				if(cali_run)
+				{
+					cali_run=0;
+					pthread_join(cali,&ret);
 				}
 				sys_run=0;
 				break;
@@ -201,6 +213,21 @@ void* sys_interface()
 
 			case 4 :
 				pthread_create(&swp,NULL,sweep,NULL);	//start sweep process	
+				break;
+
+			case 5 :
+				if(cali_run==0)
+				{
+					cali_run=1;
+					printf("[SYS] Calibrate IMU proccess started.\n");
+					pthread_create(&cali,NULL,calibrate_imu,NULL);	//start balance process	
+
+				}
+				else
+				{
+					cali_run=0;
+					printf("[SYS] Calibrate IMU proccess stopped.\n");
+				}
 				break;
 
 			default: 

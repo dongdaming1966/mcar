@@ -127,7 +127,7 @@ void imu_rd(int fd,double data[3])
 
 	spi_transfer(fd,2,24,com,buff);
 	
-	data[0]=DATACONVERT((int16_t)buff[4]<<8|buff[5])*0.05;
+	data[0]=DATACONVERT((int16_t)buff[4]<<8|buff[5])*0.05*PI/180;
 	accy=DATACONVERT((int16_t)buff[12]<<8|buff[13])*0.00333;
 	accz=DATACONVERT((int16_t)buff[14]<<8|buff[15])*0.00333;
 
@@ -143,11 +143,11 @@ void imu_rd(int fd,double data[3])
 
 	//Use accelerometer yz axis data to calculate angle in full range.
 	if(accz<0)			
-		data[1]=-asin(accy)*90/(PI/2);
+		data[1]=-asin(accy);
 	else if(accy>0)
-		data[1]=-180+asin(accy)*90/(PI/2);
+		data[1]=-PI+asin(accy);
 	else
-		data[1]=180+asin(accy)*90/(PI/2);
+		data[1]=PI+asin(accy);
 	
 }
                     

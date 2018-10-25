@@ -21,6 +21,8 @@
 //		1.2.2		add options for balance function,which can be operated in
 //				config.h. improved simple time control and motor position
 //				control performance.
+//		1.2.3		added matrix numeration function. rewrite kalman file.
+//		1.2.4		added PID with feeedback linearzation controller
 //
 //************************************************************************
 
@@ -36,7 +38,10 @@ int main(void)
 	double imu_data[3];	//imu data buffer used in kalman filter initilization
 	int ret=1;		//return value of sys_interface
 	pthread_t sys;
+	void *sys_ret;
 	int motor_fd;
+
+	setbuf(stdout, NULL);	//disable printf buff
 
 	signal(SIGINT,stop);
 	sys_welcome();
@@ -52,7 +57,7 @@ int main(void)
 
 	pthread_create(&sys,NULL,sys_interface,NULL);	//start interface process	
 
-	while(sys_run);
+	pthread_join(sys,&sys_ret);
 	clean();
 
 	return 0;

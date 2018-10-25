@@ -54,8 +54,9 @@
 // angle bias [6]
 //
 //********************************
-double para[7];
-int para_num=7;
+double para[99];
+int para_num=11;
 
 int sys_run=1;
 int balance_run=0;
+int cali_run=0;
