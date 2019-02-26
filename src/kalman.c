@@ -1,13 +1,10 @@
 //File name:	kalman.c
+//Author:	Dong Daming
 
 #include	"common.h"
+#include 	"kalman.h"
 #include	"config.h"
-
-#ifndef		FILEMAT
-#include	"matrix.c"
-#endif
-
-#define		FILEKALMAN
+#include	"matrix.h"
 
 double a[2][2]={{1,-SAMPLETIME},{0,1}};
 double b[2][2]={{SAMPLETIME,0},{0,0}};

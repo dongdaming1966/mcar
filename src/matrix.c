@@ -1,6 +1,9 @@
-#include <common.h>
+//File name:	matrix.c
+//Author:	Dong Daming
 
-#define	FILEMAT
+#include <matrix.h>
+#include <common.h>
+#include <stdarg.h>
 
 //******************************************
 //Name:		matrix_print
@@ -23,7 +26,7 @@ void matrix_print(int size,int num, ...)
 		matrix_input=va_arg(valist,double *);
 		for(j=0;j<size*size;j++)
 		{
-			if(j%size==0)	
+			if(j%size==0)
 				printf("\n");
 			printf("%lf ",matrix_input[j]);
 		}
@@ -48,7 +51,7 @@ int matrix_trans(int size, ...)
 	double *output,*input;
 	va_list valist;
 
-	if(size>9) 
+	if(size>9)
 	{
 		printf("ERROR: matrix is too large!");
 		return -1;
@@ -87,7 +90,7 @@ int matrix_inv(int size, ...)
 	double *output,*input;
 	va_list valist;
 
-	if(size>9) 
+	if(size>9)
 	{
 		printf("ERROR: matrix is too large!");
 		return -1;
@@ -154,7 +157,7 @@ int matrix_sum(int size,int num, ...)
 	int i,j;
 	va_list valist;
 
-	if(size>9) 
+	if(size>9)
 	{
 		printf("ERROR: matrix is too large!");
 		return -1;
@@ -165,7 +168,7 @@ int matrix_sum(int size,int num, ...)
 	input=va_arg(valist,double *);
 	for(i=0;i<size*size;i++)
 		*(tmp+i)=*(input+i);
-	
+
 	for(i=1;i<num;i++)
 	{
 		input=va_arg(valist,double *);
@@ -195,7 +198,7 @@ int matrix_multi(int size,int num, ...)
 	int i,j,k;
 	va_list valist;
 
-	if(size>9) 
+	if(size>9)
 	{
 		printf("ERROR: matrix is too large!");
 		return -1;
@@ -229,4 +232,3 @@ int matrix_multi(int size,int num, ...)
 	}
 	return 0;
 }
-

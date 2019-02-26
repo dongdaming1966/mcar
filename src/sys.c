@@ -1,27 +1,7 @@
 //File name:	sys.c
 //Author:	Dong Daming
 
-#include	"common.h"
-#include	<pthread.h>
-
-#ifndef		FILEMOTOR
-#include	"motor.c"
-#endif
-
-#ifndef		FILEFUNC
-#include	"func.c"
-#endif
-
-#define		FILESYS
-
-#define		COMMAXNUM 99
-#define		COMMAXLEN 20
-
-extern double para[];
-extern int para_num;
-extern int sys_run;
-extern int balance_run;
-extern int cali_run;
+#include "sys.h"
 
 //******************************************
 //Name:		sys_welcome
@@ -60,13 +40,11 @@ void sys_para()
 	int index;
 	int para_run=1;
 
-	int i;
-
 	while(para_run)
 	{
 		printf("\npara >> ");
 
-		scanf("%s",&input);
+		scanf("%s",input);
 		for(index=0;index<COMMAXNUM;index++)
 		{
 			if(!strcmp(input,com[index]))
@@ -106,9 +84,20 @@ void sys_para()
 				printf("[6] angle bias:%lf\n",para[6]);
 				printf("\n*******************************************\n\n");
 				printf("PID CONTROLLER with FEEDBACK LINEARZATION\n");
-				printf("[7] proportion:%lf\n[8] differetion:%lf\n[9] velocity gain:%lf\n[10] position gain: %lf\n",para[7],para[8],para[9],para[10]);
+				printf("[7] proportion:%lf\n[8] differetion:%lf\n[9] gravity gain:%lf\n[10] position gain: %lf\n",para[7],para[8],para[9],para[10]);
 				printf("\n*******************************************\n\n");
-
+				printf("SLIDING MODE CONTROLLER\n");
+				printf("[11] system parameter:%lf\n[12] proportion:%lf\n",para[11],para[12]);
+				printf("\n*******************************************\n\n");
+				printf("SLIDING MODE with PID CONTROLLER\n");
+				printf("[13] proportion:%lf\n[14] differetion:%lf\n[15] tolarent:%lf\n[16] amplitude:%lf\n",para[13],para[14],para[15],para[16]);
+				printf("\n*******************************************\n\n");
+				printf("LQR CONTROLLER with FEEDBACK LINEARZATION\n");
+				printf("[17] linear part:%lf\n[18] gravity part:%lf\n[19] body acc compensation:%lf\n[20] gain:%lf\n",para[17],para[18],para[19],para[20]);
+				printf("\n*******************************************\n\n");
+				printf("MPC CONTROLLER\n");
+				printf("[21] output amplify:%lf\n",para[21]);
+				printf("\n*******************************************\n\n");
 				break;
 
 			case 3:
@@ -137,7 +126,7 @@ void sys_para()
 //Description:	collect user's input information, 
 //		then start the function needed.
 //******************************************
-void* sys_interface()
+void* sys_interface(void* arg)
 {
 	char com[COMMAXNUM][COMMAXLEN]={"h",		//index 0
 					"q",		//index 1
@@ -157,7 +146,7 @@ void* sys_interface()
 	while(sys_run)
 	{
 		printf(">> ");
-		scanf("%s",&input);
+		scanf("%s",input);
 		for(index=0;index<COMMAXNUM;index++)
 		{
 			if(!strcmp(input,com[index]))
@@ -235,4 +224,5 @@ void* sys_interface()
 		}
 	}
 
+	return 0;
 }

@@ -1,21 +1,23 @@
-#include	"common.h"
-#include	"config.h"
-
+//File name:	func.c	
+//Author:	Dong Daming
+#include	<stdlib.h>
 #include	<sys/time.h>
 #include	<sys/wait.h>
 #include	<math.h>
-#include	<stdlib.h>
 
-#define		FILEFUNC
+#include 	"func.h"
+#include	"common.h"
+#include	"config.h"
+#include	"imu.h"
+#include	"kalman.h"
+#include	"motor.h"
+#include	"file.h"
 
-#define		MOTOR_I_LIMIT 10000000
+#ifdef MPC
+#include	"solver.h"
+#include	"mpc.h"
+#endif
 
-extern int sys_run;
-extern int balance_run;
-extern int cali_run;
-extern double para[];
-
-int imu_fd,motor_fd;
 FILE *plot_fd;
 
 double abs_double(double data)
@@ -39,21 +41,19 @@ void stop(int signo)
 	_exit(0);
 }
 
-void* balance()
+void* balance(void* arg)
 {
 	double ctl_output[MAXLOADBUFF]={0};
 
+#ifdef TIMECHECK
 	int i;
+#endif
 	double motor_output=0;
 
-	double gyro_i,angle;
 	double motor_i=0;
 	double angle_error=0;
 	double imu_data[3];
 	double *kalman_imu_data;
-	double test_data[2];
-	double kalman_est;
-	double temp;
 	
 	struct timeval timestart,t1;
 	double timenow=0;
@@ -90,6 +90,10 @@ void* balance()
 	timenow=0;
 	timep=0;
 
+#ifdef MPC
+	mpc_init();
+#endif
+
 	while(balance_run)
 	{
 
@@ -119,11 +123,46 @@ void* balance()
 #endif
 
 #ifdef LINEARPID
-		angle_error=*(kalman_imu_data)+para[9]*motor_output+para[10]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
 		ctl_output[0]=para[7]*angle_error+para[8]**(kalman_imu_data+1);
-		ctl_output[0]=0.01*ctl_output[0]/(0.06*cos(kalman_imu_data[0]));
+		ctl_output[0]=ctl_output[0]/cos(kalman_imu_data[0]);
 #endif
 
+#ifdef SLIDINGMODE 
+		//ctl_output[0]=-para[12]*((kalman_imu_data[0]>0?-1:1)*para[11]*sqrt(1-cos(kalman_imu_data[0]))-kalman_imu_data[1])/cos(kalman_imu_data[0]);
+		ctl_output[0]=para[12]*((para[11]*imu_data[1]+imu_data[0])>0?1:-1);
+#endif
+
+#ifdef SLIDINGMODEPID
+		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		ctl_output[0]=para[13]*angle_error+para[14]**(kalman_imu_data+1);
+		if(ctl_output[0]>para[15])
+			ctl_output[0]=para[15];
+		if(ctl_output[0]<-para[15])
+			ctl_output[0]=-para[15];
+		ctl_output[0]*=para[16];
+		ctl_output[0]/=cos(kalman_imu_data[0]);
+#endif
+
+#ifdef LINEARLQR
+		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		ctl_output[0]=-0.9983*angle_error-1.7301**(kalman_imu_data+1);
+		ctl_output[1]=ctl_output[0];
+//		ctl_output[0]*=para[17];
+		ctl_output[0]=(para[18]*(326.7*sin(*(kalman_imu_data))+*(kalman_imu_data+1)**(kalman_imu_data+1)*sin(*(kalman_imu_data)))-para[17]*ctl_output[0])/(0.42+cos(*(kalman_imu_data)))-para[19]*ctl_output[0];
+		ctl_output[0]*=para[20];
+//		ctl_output[0]=(326*sin(*(kalman_imu_data))+sin(*(kalman_imu_data))*(*(kalman_imu_data+1))*(*(kalman_imu_data+1))+(-3.556-cos(*(kalman_imu_data)))*ctl_output[0])/(0.423+cos(*(kalman_imu_data)))+ctl_output[0];
+//		ctl_output[0]*=para[18];
+#endif
+
+#ifdef MPC
+		mpc_update(kalman_imu_data[0],kalman_imu_data[1]);
+		solve();
+		ctl_output[0]=para[21]*vars.u_0[0];
+#endif
+		//limit output
+//		if(ctl_output[0]>1)	ctl_output[0]=1;
+//		if(ctl_output[0]<-1)	ctl_output[0]=-1;
 		//start up smoothly
 		if(timenow<STARTPERIOD)
 			ctl_output[0]*=timenow/STARTPERIOD;
@@ -133,10 +172,10 @@ void* balance()
 		check_time[2]=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 #endif
 		
-		motor_output+=ctl_output[0];
+		motor_output+=ctl_output[0]*SAMPLETIME;
 
 #ifdef	DATARECORD
-		fprintf(plot_fd,"%lf %lf %lf %lf %lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_output,ctl_output[0]);
+		fprintf(plot_fd,"%-10lf\t%-10lf\t%-10lf\t%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),imu_data[0],imu_data[1]);
 #endif
 
 #ifdef	TIMECHECK
@@ -158,7 +197,7 @@ void* balance()
 		timenow=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 
 #ifdef MONITOR
-		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_output);
+		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\toutput:%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),ctl_output[0]);
 #endif	
 
 #ifdef	REALTIME
@@ -170,16 +209,17 @@ void* balance()
 #endif
 
 #ifdef TIMECHECK
-		if(timenow-timep>1.5*SAMPLETIME){
-			printf("[FUNC] WARNING:This control period is longer than setting period %lf:",timenow-timep);
+//		if(timenow-timep>1.5*SAMPLETIME){
+//			printf("[FUNC] WARNING:This control period is longer than setting period %lf:",timenow-timep);
 			for(i=1;i<5;i++)
 				printf(" %lf",check_time[i]-check_time[i-1]);
 			printf("\n");
-		}
+//		}
 #endif
 
 	}
 
+	motor_output=0;
 #ifdef	MOTOR
 	motor_di(motor_fd,1);
 	motor_di(motor_fd,2);
@@ -189,9 +229,11 @@ void* balance()
 #ifdef	DATARECORD
 	fclose(plot_fd);
 #endif
+
+	return 0;
 }
 
-void* sweep()
+void* sweep(void* arg)
 {
 	int i=0;
 	double amp[6]={0.02,-0.02,0.02,-0.02,0.02,-0.02};
@@ -222,9 +264,11 @@ void* sweep()
 	para[5]=0;
 
 	printf("\b\b\b[FUNC] sweeping finished.\n>> ");
+
+	return 0;
 }
 
-void* calibrate_imu()
+void* calibrate_imu(void* arg)
 {
 	double imu_data[3];
 	int i=1;
@@ -290,7 +334,7 @@ void* calibrate_imu()
 		kalman_imu_data=kalman(imu_data[1],imu_data[0]);
 
 #ifdef MONITOR
-		printf("time:%-7lf\timu:%-7lf\t%-7lf\n",timenow,imu_data[0],imu_data[1],motor_output);
+		printf("time:%-7lf\timu:%-7lf\t%-7lf\n",timenow,imu_data[0],imu_data[1]);
 #endif	
 
 		//record data
@@ -312,4 +356,6 @@ void* calibrate_imu()
 	motor_di(motor_fd,2);
 	close(motor_fd);
 	fclose(plot_fd);
+
+	return 0;
 }

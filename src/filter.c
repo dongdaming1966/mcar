@@ -1,10 +1,7 @@
 //File name:	filter.c
 //Author:	Dong Daming
 
-#include	"common.h"
-
-#define		FILEFILTER
-
+#include "filter.h"
 //******************************************
 //Name:		filter_fir
 //Parameter:	order	int	FIR filter order

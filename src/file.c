@@ -1,22 +1,19 @@
-//File name:	FILE.c
+//File name:	file.c
 //Author:	Dong Daming
 
+#include	"file.h"
 #include	"common.h"
-
-#define		FILEFILE
-
-#define		MAXLOADBUFF 9999
 
 //******************************************
 //Name:		file_loadfir
 //Parameter:	path	*char	the file path
 //		buff	*double	buffer
-//Return:	j	int	the number of loaded parameters 
+//Return:	j	int	the number of loaded parameters
 //Description:	Load FIR filter's parameters
 //******************************************
 int file_loadfir(char *path,double *buff)
 {
-	FILE *fd;	
+	FILE *fd;
 	int i=0;
 	int j=0;
 
@@ -51,7 +48,7 @@ int file_loadfir(char *path,double *buff)
 //******************************************
 void file_loadpara(char *path,int num,double *buff)
 {
-	FILE *fd;	
+	FILE *fd;
 	int i;
 
 	fd=fopen(path,"r");
@@ -81,7 +78,7 @@ void file_loadpara(char *path,int num,double *buff)
 //******************************************
 void file_savepara(char *path,int num,double *buff)
 {
-	FILE *fd;	
+	FILE *fd;
 	int i;
 
 	fd=fopen(path,"w");

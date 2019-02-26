@@ -1,15 +1,7 @@
 //File name:	spi.c	
 //Author:	Dong Daming
 
-#include	"common.h"
-#include	"config.h"
-
-#include        <linux/spi/spidev.h>
-#include	<stdarg.h>		//Variable Argument
-
-#define		FILESPI
-
-#define		dataconver(x) (x&0x2000)? x|0xc000:&0x1fff
+#include "spi.h"
 
 //******************************************
 //Name:		spi_init
@@ -28,7 +20,7 @@ int spi_init(int p)
 	uint16_t command=0xbe80;
 
 	if(p==0)	fd = open(SPI0_PATH, O_RDWR);
-	if(p==1)	fd = open(SPI1_PATH, O_RDWR);
+	else		fd = open(SPI1_PATH, O_RDWR);
 
 	if((ioctl(fd, SPI_IOC_WR_MODE, 		   &mode )<0)|
 	   (ioctl(fd, SPI_IOC_RD_MODE, 		   &mode )<0)|
@@ -75,8 +67,6 @@ int spi_transfer(int fd, int mod, int len,...)
 	unsigned long send_adr=(unsigned long)send;
 	int i;
 
-	int* adr;
-	
 	va_start(valist,len);
 	
 	if(mod==0||mod==3)	

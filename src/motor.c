@@ -3,23 +3,14 @@
 //Hardware:	motor--->FAULHABER 3564K
 //		driver--->FAULHABER MCBL 3006C
 
-#include	"common.h"
-#include        <string.h>
-#include        <termios.h>
-
-#ifndef		FILEMCP
-#include	"mcp.c"
-#endif
-
-#define		FILEMOTOR
-
+#include "motor.h"
 //******************************************
 //Name:		motor_init
 //Parameter:	void
 //Return:	fd	int	spi handle
 //Description:	motor initization
 //******************************************
-int motor_init()
+int motor_init(void)
 {
 	int fd;
 
@@ -184,7 +175,6 @@ void motor_wr_la(int fd,int index,float pos)
 //Return:	void
 //Description:	activate position control and start positioning	
 //******************************************
-
 int motor_wr_m(int fd,int index)
 {
 	mcp_chk(fd,0);

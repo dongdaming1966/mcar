@@ -1,3 +1,5 @@
+#ifndef COMMON_H
+#define COMMON_H
 #include        <stdio.h>
 #include        <fcntl.h>
 #include        <unistd.h>
@@ -6,3 +8,4 @@
 
 #define		PI 3.14159265
 
+#endif //COMMON_H

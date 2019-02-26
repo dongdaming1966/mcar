@@ -2,19 +2,7 @@
 //Author:	Dong Daming
 //Hardware:	ADIS 16405
 
-#include	"common.h"
-#include	"math.h"
-
-#ifndef		FILESPI
-#include	"spi.c"
-#endif
-
-#define		FILEIMU
-
-#define		ACCBIAS 0.055
-
-//convert 14bits into 16bits
-#define         DATACONVERT(x) ((int16_t) (((x)&0x2000)? (x)|0xc000:(x)&0x1fff))
+#include "imu.h"
 
 //******************************************
 //Name:		imu_init
@@ -22,7 +10,7 @@
 //Return:	fd	int	spi handle
 //Description:	IMU initization
 //******************************************
-int imu_init()
+int imu_init(void)
 {
 	int fd,i;
 	uint8_t receive[2];

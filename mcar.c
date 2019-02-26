@@ -23,23 +23,19 @@
 //				control performance.
 //		1.2.3		added matrix numeration function. rewrite kalman file.
 //		1.2.4		added PID with feeedback linearzation controller
+//		1.3		rebuild project structure.
+//				added MPC controller
 //
 //************************************************************************
 
 
-#include        "common.h"
 #include	"main.h"
-
-#define		FILEMCAR
 
 //main program
 int main(void)
 {
-	double imu_data[3];	//imu data buffer used in kalman filter initilization
-	int ret=1;		//return value of sys_interface
 	pthread_t sys;
 	void *sys_ret;
-	int motor_fd;
 
 	setbuf(stdout, NULL);	//disable printf buff
 

@@ -1,42 +1,24 @@
-#ifndef		FILEIMU
-#include	"imu.c"
-#endif
+#ifndef MAIN_H
+#define MAIN_H
 
-#ifndef		FILEMOTOR
-#include	"motor.c"
-#endif
-
-#ifndef		FILEPLOT
-#include	"plot.c"
-#endif
-
-#ifndef		FILEKALMAN
-#include	"kalman.c"
-#endif
-
-#ifndef		FILEFILE
-#include	"file.c"
-#endif
-
-#ifndef		FILEFILTER
-#include	"filter.c"
-#endif
-
-#ifndef		FILESYS
-#include	"sys.c"
-#endif
-
-#ifndef		FILEFUNC
-#include	"func.c"
-#endif
+#include  	"common.h"
+#include	"imu.h"
+#include	"motor.h"
+#include	"plot.h"
+#include	"kalman.h"
+#include	"file.h"
+#include	"filter.h"
+#include	"sys.h"
+#include	"func.h"
 
 #include	<pthread.h>
+#include	<signal.h>
 
 
 //*********************************
 //
 // PD Controller
-// proportion [0]        
+// proportion [0]
 // differetiation [1]
 //
 // velocity gain [2]
@@ -55,8 +37,10 @@
 //
 //********************************
 double para[99];
-int para_num=11;
+int para_num=PARAMETERNUMBER;
 
 int sys_run=1;
 int balance_run=0;
 int cali_run=0;
+
+#endif // MAIN_H
