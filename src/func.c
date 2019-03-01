@@ -43,17 +43,18 @@ void stop(int signo)
 
 void* balance(void* arg)
 {
-	double ctl_output[MAXLOADBUFF]={0};
 
 #ifdef TIMECHECK
 	int i;
 #endif
+
+	double ctl_output[MAXLOADBUFF]={0};
 	double motor_output=0;
 
 	double motor_i=0;
-	double angle_error=0;
 	double imu_data[3];
 	double *kalman_imu_data;
+	double angle_error=0;
 	
 	struct timeval timestart,t1;
 	double timenow=0;
@@ -81,7 +82,7 @@ void* balance(void* arg)
 
 	do {
 		imu_rd(imu_fd,imu_data);
-	} while(((abs(imu_data[0]*100)>1)||(abs(imu_data[1]*100)>5))&&balance_run);
+	} while(((abs(imu_data[0]*100)>5)||(abs(imu_data[1]*100)>1))&&balance_run);
 
 	if(balance_run)
 		printf("\b\b\b[FUNC] target angle reached.\n>> ");
@@ -103,7 +104,7 @@ void* balance(void* arg)
 #endif
 
 		imu_rd(imu_fd,imu_data);
-		kalman_imu_data=kalman(imu_data[1],imu_data[0]);
+		kalman_imu_data=kalman(imu_data[0],imu_data[1]);
 
 #ifdef	TIMECHECK
 		gettimeofday(&t1,NULL);
@@ -130,7 +131,7 @@ void* balance(void* arg)
 
 #ifdef SLIDINGMODE 
 		//ctl_output[0]=-para[12]*((kalman_imu_data[0]>0?-1:1)*para[11]*sqrt(1-cos(kalman_imu_data[0]))-kalman_imu_data[1])/cos(kalman_imu_data[0]);
-		ctl_output[0]=para[12]*((para[11]*imu_data[1]+imu_data[0])>0?1:-1);
+		ctl_output[0]=para[12]*((para[11]*imu_data[0]+imu_data[1])>0?1:-1);
 #endif
 
 #ifdef SLIDINGMODEPID
@@ -156,7 +157,8 @@ void* balance(void* arg)
 #endif
 
 #ifdef MPC
-		mpc_update(kalman_imu_data[0],kalman_imu_data[1]);
+		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow)+para[22]*ctl_output[0]+para[23]*motor_i;
+		mpc_update(angle_error,kalman_imu_data[1]);
 		solve();
 		ctl_output[0]=para[21]*vars.u_0[0];
 #endif
@@ -175,7 +177,7 @@ void* balance(void* arg)
 		motor_output+=ctl_output[0]*SAMPLETIME;
 
 #ifdef	DATARECORD
-		fprintf(plot_fd,"%-10lf\t%-10lf\t%-10lf\t%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),imu_data[0],imu_data[1]);
+		fprintf(plot_fd,"%-10lf\t%-10lf\t%-10lf\t%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_i,motor_output);
 #endif
 
 #ifdef	TIMECHECK
@@ -197,7 +199,7 @@ void* balance(void* arg)
 		timenow=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 
 #ifdef MONITOR
-		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\toutput:%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),ctl_output[0]);
+		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),angle_error,motor_output);
 #endif	
 
 #ifdef	REALTIME

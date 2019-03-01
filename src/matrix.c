@@ -36,6 +36,48 @@ void matrix_print(int size,int num, ...)
 }
 
 //******************************************
+//Name:		matrix_changesize
+//Parameter:	targ	double* target matrix
+//		insize	int	size of input matrix
+//		outsize	int	size of output matrix
+//		
+//Return:	void
+//Description:	change matrix size
+//******************************************
+void matrix_changesize(double* targ, int insize, int outsize)
+{
+	int i,j;
+	double tmp[100];
+
+	if(insize>9||outsize>9)
+		printf("[MATRIX]ERROR: Matrix is too large!\n");
+	if(insize>=outsize)
+		for(i=0;i<outsize;i++)
+			for(j=0;j<outsize;j++)
+				tmp[i*outsize+j]=*(targ+i*insize+j);
+			
+	else
+	{
+		for(i=0;i<insize;i++)
+		{
+			for(j=0;j<insize;j++)
+				tmp[i*outsize+j]=*(targ+i*insize+j);
+			for(j=insize;j<outsize;j++)
+				tmp[i*outsize+j]=0;
+		}
+		for(i=insize;i<outsize;i++)
+			for(j=0;j<outsize;j++)
+				tmp[i*outsize+j]=0;
+	}
+
+	for(i=0;i<outsize;i++)
+		for(j=0;j<outsize;j++)
+			*(targ+i*outsize+j)=tmp[i*outsize+j];
+
+	
+}
+
+//******************************************
 //Name:		matrix_trans
 //Parameter:	size	int	size of matrix
 //		...	*double	result

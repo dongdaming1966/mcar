@@ -8,8 +8,8 @@ Settings settings;
 void mpc_init(void)
 {
 
-  set_defaults();
-  setup_indexing();
+        set_defaults();
+        setup_indexing();
 	settings.verbose=0;
 
 	params.x_0[0]=0.5;

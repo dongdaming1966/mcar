@@ -8,7 +8,7 @@
 //#define		DATARECORD
 //need define DATARECORD before define PLOT
 //#define		PLOT
-#define		MONITOR
+//#define		MONITOR
 #define		REALTIME
 #define		MOTOR
 
@@ -40,6 +40,6 @@
 #define		SAMPLETIME 0.002
 #endif
 
-#define		PARAMETERNUMBER 22
+#define		PARAMETERNUMBER 24
 
 #endif //CONFIG_H

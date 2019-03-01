@@ -97,6 +97,8 @@ void sys_para()
 				printf("\n*******************************************\n\n");
 				printf("MPC CONTROLLER\n");
 				printf("[21] output amplify:%lf\n",para[21]);
+				printf("[22] wheel_vel:%lf\n",para[22]);
+				printf("[23] wheel_pos:%lf\n",para[23]);
 				printf("\n*******************************************\n\n");
 				break;
 

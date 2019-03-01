@@ -100,9 +100,9 @@ int imu_init(void)
 //Name:		imu_rd
 //Parameter:	fd	int	spi handle
 //		data[3]	double	use to return the data received.
-//				data[0]---->gyro data
-//				data[1]---->the angle between IMU z axis
+//				data[0]---->the angle between IMU z axis
 //					    and vertical axis
+//				data[1]---->gyro data
 //				data[2]---->IMU power supply measurement
 //Return:	void	
 //******************************************
@@ -115,7 +115,7 @@ void imu_rd(int fd,double data[3])
 
 	spi_transfer(fd,2,24,com,buff);
 	
-	data[0]=DATACONVERT((int16_t)buff[4]<<8|buff[5])*0.05*PI/180;
+	data[1]=DATACONVERT((int16_t)buff[4]<<8|buff[5])*0.05*PI/180;
 	accy=DATACONVERT((int16_t)buff[12]<<8|buff[13])*0.00333;
 	accz=DATACONVERT((int16_t)buff[14]<<8|buff[15])*0.00333;
 
@@ -131,11 +131,11 @@ void imu_rd(int fd,double data[3])
 
 	//Use accelerometer yz axis data to calculate angle in full range.
 	if(accz<0)			
-		data[1]=-asin(accy);
+		data[0]=-asin(accy);
 	else if(accy>0)
-		data[1]=-PI+asin(accy);
+		data[0]=-PI+asin(accy);
 	else
-		data[1]=PI+asin(accy);
+		data[0]=PI+asin(accy);
 	
 }
                     
