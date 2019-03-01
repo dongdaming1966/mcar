@@ -25,6 +25,7 @@
 //		1.2.4		added PID with feeedback linearzation controller
 //		1.3		rebuild project structure.
 //				added MPC controller
+//		1.3.1		improved MPC controller performance
 //
 //************************************************************************
 

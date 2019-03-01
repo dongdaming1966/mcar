@@ -157,8 +157,14 @@ void* balance(void* arg)
 #endif
 
 #ifdef MPC
-		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow)+para[22]*ctl_output[0]+para[23]*motor_i;
-		mpc_update(angle_error,kalman_imu_data[1]);
+		angle_error=+para[23]*motor_i;
+		if(angle_error>para[24])
+			angle_error=para[24];
+		if(angle_error<-para[24])
+			angle_error=-para[24];
+
+		angle_error+=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		mpc_update(angle_error,kalman_imu_data[1],para[22]);
 		solve();
 		ctl_output[0]=para[21]*vars.u_0[0];
 #endif

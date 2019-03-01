@@ -40,6 +40,6 @@
 #define		SAMPLETIME 0.002
 #endif
 
-#define		PARAMETERNUMBER 24
+#define		PARAMETERNUMBER 25
 
 #endif //CONFIG_H
