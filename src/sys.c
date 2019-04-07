@@ -73,34 +73,46 @@ void sys_para()
 
 			case 2:
 				printf("\n*******************************************\n\n");
+#ifdef PID
 				printf("PID CONTROLLER\n");
 				printf("[0] proportion:%lf\n[1] differetion:%lf\n[2] velocity gain:%lf\n[3] position gain: %lf\n",para[0],para[1],para[2],para[3]);
 
 				printf("\n*******************************************\n\n");
+#endif
 				printf("SWIP SIGNAL\n");
 				printf("[4] amplitude:%lf\n[5] frequency:%lf\n",para[4],para[5]);
 				printf("\n*******************************************\n\n");
 				printf("IMU\n");
 				printf("[6] angle bias:%lf\n",para[6]);
 				printf("\n*******************************************\n\n");
+#ifdef LINEARPID
 				printf("PID CONTROLLER with FEEDBACK LINEARZATION\n");
-				printf("[7] proportion:%lf\n[8] differetion:%lf\n[9] gravity gain:%lf\n[10] position gain: %lf\n",para[7],para[8],para[9],para[10]);
+				printf("[7] proportion:%lf\n[8] differetion:%lf\n[9] velocity gain:%lf\n[10] position gain: %lf\n",para[7],para[8],para[9],para[10]);
 				printf("\n*******************************************\n\n");
+#endif
+#ifdef SLIDINGMODE 
 				printf("SLIDING MODE CONTROLLER\n");
 				printf("[11] system parameter:%lf\n[12] proportion:%lf\n",para[11],para[12]);
 				printf("\n*******************************************\n\n");
+#endif
+#ifdef SLIDINGMODEPID
 				printf("SLIDING MODE with PID CONTROLLER\n");
 				printf("[13] proportion:%lf\n[14] differetion:%lf\n[15] tolarent:%lf\n[16] amplitude:%lf\n",para[13],para[14],para[15],para[16]);
 				printf("\n*******************************************\n\n");
+#endif
+#ifdef LINEARLQR
 				printf("LQR CONTROLLER with FEEDBACK LINEARZATION\n");
 				printf("[17] linear part:%lf\n[18] gravity part:%lf\n[19] body acc compensation:%lf\n[20] gain:%lf\n",para[17],para[18],para[19],para[20]);
 				printf("\n*******************************************\n\n");
+#endif
+#ifdef MPC
 				printf("MPC CONTROLLER\n");
 				printf("[21] output amplify:%lf\n",para[21]);
 				printf("[22] slop:%lf\n",para[22]);
 				printf("[23] wheel_pos:%lf\n",para[23]);
 				printf("[24] max_wheel_pos:%lf\n",para[24]);
 				printf("\n*******************************************\n\n");
+#endif
 				break;
 
 			case 3:

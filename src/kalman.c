@@ -24,6 +24,12 @@ double sys_unit[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
 double sys__unit[4][4]={{-1,0,0,0},{0,-1,0,0},{0,0,-1,0},{0,0,0,-1}};
 double temp4[99],temp5[99],temp6[99];
 
+double est_x[2][2]={{1},{-0.007}};
+double est_y[2][2]={0};
+double est_k[2][2]={0};
+double est_p[2][2]={{1,0},{0,1}};
+double temp7[99],temp8[99],temp9[99];
+
 //******************************************
 //Name:		kalman
 //Parameter:	output	double	model output data
@@ -142,4 +148,55 @@ double * kalman_sys(double output[],double input)
 
 	return temp4;
 }
+
+//******************************************
+//Name:		kalman
+//Parameter:	output	double	model output data
+//		input	double	model input data
+//Return:	result	*double	kalman filter output
+//******************************************
+double * kalman_est(double output,double bvel,double macc)
+{
+	double est_a[2][2]={{1,0},{0,1}};
+	double est_c[2][2]={{bvel,macc},{0,0}};
+
+	double est_q[2][2]={{0.001,0},{0,0.001}};
+	double est_r[2][2]={{100,0},{0,0}};
+
+	est_y[0][0]=output;
+
+	//xk=a*x(k-1)
+	matrix_multi(2,2,temp7,est_a,est_x);
+	matrix_sum(2,1,est_x,temp7);
+
+	//pk=a*p(k-1)*a'+q
+	matrix_trans(2,temp7,est_a);
+	matrix_multi(2,3,temp7,est_a,est_p,temp7);
+	matrix_sum(2,2,est_p,temp7,est_q);
+
+	//kk=pk*c'*(c*pk*c')^(-1)
+	matrix_trans(2,temp7,est_c);
+	matrix_multi(2,3,temp8,est_c,est_p,temp7);
+	matrix_sum(2,2,temp8,temp8,est_r);
+	temp8[0]=1/temp8[0];
+	matrix_multi(2,3,est_k,est_p,temp7,temp8);
+
+	//xk=xk+kk*(y-c*xk)
+	matrix_multi(2,3,temp7,_unit,est_c,est_x);
+	matrix_sum(2,3,temp7,est_y,temp7,temp8);
+	matrix_multi(2,2,temp7,est_k,temp7);
+	matrix_sum(2,2,est_x,est_x,temp7);
+
+	//pk=(i-kk*c)*pk
+	matrix_multi(2,3,temp7,_unit,est_k,est_c);
+	matrix_sum(2,2,temp7,unit,temp7);
+	matrix_multi(2,2,est_p,temp7,est_p);
+
+//	matrix_muilti(2,2,temp1,c,x);
+	temp7[0]=est_x[0][0];
+	temp7[1]=est_x[1][0];
+	
+	return temp7;
+}
+
 

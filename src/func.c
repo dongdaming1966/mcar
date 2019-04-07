@@ -60,6 +60,11 @@ void* balance(void* arg)
 	double timenow=0;
 	double timep=0;
 
+#ifdef MPC
+	double kalman_old=0;
+	double *kalman_est_data;
+#endif
+
 #ifdef	TIMECHECK
 	double check_time[99];
 #endif
@@ -83,6 +88,7 @@ void* balance(void* arg)
 	do {
 		imu_rd(imu_fd,imu_data);
 	} while(((abs(imu_data[0]*100)>5)||(abs(imu_data[1]*100)>1))&&balance_run);
+	kalman_imu_data=kalman(imu_data[0],imu_data[1]);
 
 	if(balance_run)
 		printf("\b\b\b[FUNC] target angle reached.\n>> ");
@@ -101,6 +107,10 @@ void* balance(void* arg)
 #ifdef	TIMECHECK
 		gettimeofday(&t1,NULL);
 		check_time[0]=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
+#endif
+
+#ifdef MPC
+		kalman_old=kalman_imu_data[1];
 #endif
 
 		imu_rd(imu_fd,imu_data);
@@ -124,7 +134,7 @@ void* balance(void* arg)
 #endif
 
 #ifdef LINEARPID
-		angle_error=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		angle_error=*(kalman_imu_data)+para[9]*motor_output+para[10]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
 		ctl_output[0]=para[7]*angle_error+para[8]**(kalman_imu_data+1);
 		ctl_output[0]=ctl_output[0]/cos(kalman_imu_data[0]);
 #endif
@@ -157,6 +167,7 @@ void* balance(void* arg)
 #endif
 
 #ifdef MPC
+		kalman_est_data=kalman_est(kalman_imu_data[1]-kalman_old,kalman_imu_data[1],ctl_output[0]);
 		angle_error=+para[23]*motor_i;
 		if(angle_error>para[24])
 			angle_error=para[24];
@@ -164,9 +175,9 @@ void* balance(void* arg)
 			angle_error=-para[24];
 
 		angle_error+=*(kalman_imu_data)+para[6]+para[4]*sin(para[5]*2*PI*timenow);
-		mpc_update(angle_error,kalman_imu_data[1],para[22]);
+		mpc_update(kalman_imu_data[0],kalman_imu_data[1],motor_i,motor_output,para[22],kalman_est_data[0],kalman_est_data[1]);
 		solve();
-		ctl_output[0]=para[21]*vars.u_0[0];
+		ctl_output[0]=para[21]*vars.u_0[0];//cos(*(kalman_imu_data));
 #endif
 		//limit output
 //		if(ctl_output[0]>1)	ctl_output[0]=1;
@@ -205,7 +216,7 @@ void* balance(void* arg)
 		timenow=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 
 #ifdef MONITOR
-		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),angle_error,motor_output);
+		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\t%-10lf\test:%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_output,motor_i,kalman_est_data[0],kalman_est_data[1]);
 #endif	
 
 #ifdef	REALTIME
