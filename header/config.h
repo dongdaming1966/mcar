@@ -5,10 +5,10 @@
 //         function         //
 //**************************//
 //#define		TIMECHECK	
-#define		DATARECORD
+//#define		DATARECORD
 //need define DATARECORD before define PLOT
 //#define		PLOT
-#define		MONITOR
+//#define		MONITOR
 #define		REALTIME
 #define		MOTOR
 

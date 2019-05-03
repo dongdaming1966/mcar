@@ -11,7 +11,7 @@ $(TARGET): obj/mcar.o $(patsubst src/%.c,obj/%.o, $(wildcard src/*.c)) $(patsubs
 	$(CC) $^ -o $(TARGET) $(OPT) $(LDLIBS)
 obj/mcar.o: mcar.c
 	make -C obj mcar.o
-obj/%.o: src/%.c
+obj/%.o: src/%.c header/%.h
 	make -C obj $(patsubst %.c,%.o, $(notdir $<))
 solver/%.o: solver/%.c
 	make -C solver $(patsubst %.c,%.o, $(notdir $<))

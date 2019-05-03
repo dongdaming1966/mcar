@@ -57,7 +57,7 @@ int spi_init(int p)
 //Description:	transfer spi data
 //******************************************
 
-int spi_transfer(int fd, int mod, int len,...)
+int spi_transfer(int fd, int mod, int len,int len_z,...)
 
 {      
 	va_list valist;
@@ -65,17 +65,21 @@ int spi_transfer(int fd, int mod, int len,...)
 	uint8_t receive[99];
 	unsigned long receive_adr=(unsigned long)receive;
 	unsigned long send_adr=(unsigned long)send;
-	int i;
+	int i,j;
 
-	va_start(valist,len);
+	va_start(valist,len_z);
 	
-	if(mod==0||mod==3)	
+	if(mod==0||mod==3)
+	{	
 		for(i=0;i<len;i++)	send[i]=va_arg(valist,int);
+		for(j=0;j<len_z;j++)	send[j+i]=0x00;
+	}
 
 	if(mod==1)	
 	{
 		receive_adr = (unsigned long)va_arg(valist,uint8_t*);
 		for(i=0;i<len;i++)	send[i]=va_arg(valist,int);
+		for(j=0;j<len_z;j++)	send[j+i]=0x00;
 	}
 
 	if(mod==2)
@@ -91,7 +95,7 @@ int spi_transfer(int fd, int mod, int len,...)
 	{
 		trans.tx_buf            = send_adr,    
 		trans.rx_buf            = receive_adr,   
-		trans.len               = len,                               
+		trans.len               = len+len_z,                               
 		trans.delay_usecs       = 0,                     
 	};
 
@@ -103,10 +107,10 @@ int spi_transfer(int fd, int mod, int len,...)
 
  	if(mod==3)	
 	{
-		printf("len: %d send:",len);
-		for(i=0;i<len;i++)	printf("%x ",send[i]);	
+		printf("len: %d send:",len+len_z);
+		for(i=0;i<len+len_z;i++)	printf("%x ",send[i]);	
 		printf("rec:");
-		for(i=0;i<len;i++)	printf("%x ",receive[i]);	
+		for(i=0;i<len+len_z;i++)	printf("%x ",receive[i]);	
 		printf("\n");
 	}
 

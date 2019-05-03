@@ -26,6 +26,8 @@
 //		1.3		rebuild project structure.
 //				added MPC controller
 //		1.3.1		improved MPC controller performance
+//		1.3.2		add position control for mpc
+//				can read motor status
 //
 //************************************************************************
 

@@ -11,6 +11,9 @@
 #define		INST_RXBUFF 0x90
 #define		INST_WRITE 0x02
 #define		INST_TXBUFF 0x40
+#define		INST_RTS 0x80
+
+#define		ADDR_CANINTF 0x2c
 
 #define		ADDR_TXB0CTRL 0x30
 #define		ADDR_TXB0SIDH 0x31
@@ -26,9 +29,13 @@
 
 int mcp_init(void);
 void mcp_print(int fd, int addr, int len);
-void mcp_chk(int fd, int num);
+void mcp_chktx(int fd, int num);
+void mcp_chkrx(int fd, int num);
+void mcp_clrx(int fd, int num);
 void mcp_settxbuff(int fd,int num,int id,int len);
 void mcp_setdata(int fd,int num,int len,...);
+void mcp_readbuff(int fd,int num,int inf[],uint8_t buff[]);
 void mcp_txsend(int fd,int num);
+void mcp_send(int fd,int num,int id,int len,...);
 
 #endif //MCP_H

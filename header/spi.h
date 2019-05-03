@@ -11,7 +11,7 @@
 
 
 int spi_init(int p);
-int spi_transfer(int fd, int mod, int len,...);
+int spi_transfer(int fd, int mod, int len,int len_z,...);
 
 #endif //SPI_H
 
