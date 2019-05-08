@@ -4,7 +4,7 @@
 #include        <string.h>
 #include        <termios.h>
 #include	"common.h"
-#include	"mcp.h"
+#include	"mcp2515.h"
 
 //get actual position
 #define	FAULHABER_POS	0x40

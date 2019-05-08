@@ -28,6 +28,7 @@
 //		1.3.1		improved MPC controller performance
 //		1.3.2		add position control for mpc
 //				can read motor status
+//		1.3.3		add mpu6050 support,tested on inertia wheel model
 //
 //************************************************************************
 
@@ -45,7 +46,7 @@ int main(void)
 	signal(SIGINT,stop);
 	sys_welcome();
 
-	file_loadpara("para.cfg",para_num,para);
+	file_loadpara("para.cfg",PARAMETERNUMBER,para);
 
 	imu_fd=imu_init();
 	if(imu_fd<0)

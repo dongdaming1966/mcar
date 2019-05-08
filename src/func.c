@@ -83,7 +83,7 @@ void* balance(void* arg)
 		_exit(0);
 	}
 	motor_en(motor_fd,1);
-	motor_en(motor_fd,2);
+	//motor_en(motor_fd,2);
 #endif
 
 	do {
@@ -129,8 +129,11 @@ void* balance(void* arg)
 		//So use current controll if is possible.
 
 #ifdef PID
-		angle_error=*(kalman_imu_data)+para[2]*motor_output+para[3]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		//angle_error=*(kalman_imu_data)+para[2]*motor_output+para[3]*motor_i+para[6]+para[4]*sin(para[5]*2*PI*timenow);
+		angle_error=*(kalman_imu_data)+para[6]+para[25]*motor_output;
 		ctl_output[0]=para[0]*angle_error+para[1]**(kalman_imu_data+1);
+		ctl_output[0]=para[2]*tanh(para[3]*ctl_output[0]);
+		motor_output*=para[26];
 #endif
 
 #ifdef LINEARPID
@@ -191,7 +194,7 @@ void* balance(void* arg)
 		motor_output+=ctl_output[0]*SAMPLETIME;
 
 #ifdef	DATARECORD
-		fprintf(plot_fd,"%-10lf\t%-10lf\t%-10lf\t%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_i,motor_output);
+		fprintf(plot_fd,"%-10lf\t%-10lf\t%-10lf\t%-10lf\t%-10lf\n",timenow,*(imu_data),*(imu_data+1),motor_i,motor_output);
 #endif
 
 #ifdef	TIMECHECK
@@ -200,9 +203,9 @@ void* balance(void* arg)
 #endif
 
 #ifdef MOTOR
-		motor_wr_v(motor_fd,1,-motor_output,200*23);
-		motor_wr_v(motor_fd,2,motor_output,200*23);
-		motor_rd(motor_fd,1,FAULHABER_GV);
+		motor_wr_v(motor_fd,1,-motor_output,500);
+//		motor_wr_v(motor_fd,2,motor_output,200*23);
+//		motor_rd(motor_fd,1,FAULHABER_GV);
 #endif
 
 #ifdef	TIMECHECK
@@ -214,7 +217,7 @@ void* balance(void* arg)
 		timenow=t1.tv_sec-timestart.tv_sec+((double)t1.tv_usec-(double)timestart.tv_usec)/1000000;
 
 #ifdef MONITOR
-		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\t%-10lf\test:%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_output,motor_i,kalman_est_data[0],kalman_est_data[1]);
+		printf("time:%-7lf\tkalman:%-10lf\t%-10lf\tmotor:%-10lf\t%-10lf\n",timenow,*(kalman_imu_data),*(kalman_imu_data+1),motor_output,ctl_output[0]);
 #endif	
 
 #ifdef	REALTIME

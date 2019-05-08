@@ -65,7 +65,7 @@ void sys_para()
 
 			case 1:
 				scanf("%d%lf",&index,&num);
-				if(index<para_num)
+				if(index<PARAMETERNUMBER)
 					para[index]=num;
 				else
 					printf("[SYS] error: index %d %lf is out of range!\n",index,num);
@@ -75,7 +75,7 @@ void sys_para()
 				printf("\n*******************************************\n\n");
 #ifdef PID
 				printf("PID CONTROLLER\n");
-				printf("[0] proportion:%lf\n[1] differetion:%lf\n[2] velocity gain:%lf\n[3] position gain: %lf\n",para[0],para[1],para[2],para[3]);
+				printf("[0] proportion:%lf\n[1] differetion:%lf\n[2] output gain:%lf\n[3] error gain: %lf\n[25] velocity gain:%lf\n[26] motor gain: %lf\n",para[0],para[1],para[2],para[3],para[25],para[26]);
 
 				printf("\n*******************************************\n\n");
 #endif
@@ -120,11 +120,11 @@ void sys_para()
 				break;
 
 			case 4:
-				file_loadpara("para.cfg",para_num,para);
+				file_loadpara("para.cfg",PARAMETERNUMBER,para);
 				break;
 
 			case 5:
-				file_savepara("para.cfg",para_num,para);
+				file_savepara("para.cfg",PARAMETERNUMBER,para);
 				break;
 
 	
